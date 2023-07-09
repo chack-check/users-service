@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "chack-check users service"
+version = "0.1.0"
+description = "Users service for Chack-Check project"
+authors = ["artemowkin <artyom.groshev2017@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "chack_check users service"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.100.0"
+strawberry-graphql = {extras = ["fastapi"], version = "^0.194.4"}
+uvicorn = "^0.22.0"
+email-validator = "^2.0.0.post2"
+sqlalchemy = "^2.0.18"
+pydantic-settings = "^2.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
