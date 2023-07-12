@@ -1,16 +1,47 @@
-from sqlalchemy.orm import mapped_column, Mapped
+import  re
+from dataclasses import asdict
 
-from app.project.db import Base
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import insert
+
+from .graphql.types import AuthData
+from .schemas import DbUser
+from .models import User
+from .exceptions import (
+    UserWithThisEmailAlreadyExists,
+    UserWithThisPhoneAlreadyExists,
+    UserWithThisUsernameAlreadyExists,
+)
 
 
-class User(Base):
-    __tablename__ = 'users'
+def handle_unique_violation(func):
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
-    email: Mapped[str] = mapped_column(unique=True)
-    first_name: Mapped[str] = mapped_column()
-    last_name: Mapped[str] = mapped_column()
-    middle_name: Mapped[str | None] = mapped_column(nullable=True)
-    activity: Mapped[str] = mapped_column()
-    status: Mapped[str | None] = mapped_column(nullable=True)
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except IntegrityError as e:
+            field_name = re.search(r"\((.*)\)=\(.*\)", e.args[0]).group(1)
+            exception = {
+                'username': UserWithThisUsernameAlreadyExists("User with this username alaready exists"),
+                'phone': UserWithThisPhoneAlreadyExists("User with this phone already exists"),
+                'email': UserWithThisEmailAlreadyExists("User with this email already exists"),
+            }[field_name]
+            raise exception
+
+    return wrapper
+
+
+class UsersQueries:
+
+    def __init__(self, session: AsyncSession):
+        self._session = session
+
+    @handle_unique_violation
+    async def create(self, user_data: AuthData, password: str) -> DbUser:
+        values = asdict(user_data)
+        values['password'] = password
+        del values['password_repeat']
+        stmt = insert(User).returning(User).values(**values)
+        result = await self._session.execute(stmt)
+        return DbUser.model_validate(result.fetchone()[0])
