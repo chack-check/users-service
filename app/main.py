@@ -3,8 +3,8 @@ import strawberry
 from strawberry.fastapi import GraphQLRouter
 
 from app.v1.dependencies import get_context
-from app.v1.graphql.main import Query, Mutation
-from app.project.db import engine, Base
+from app.v1.graphql.base import Query, Mutation
+from app.project.db import init_db
 
 
 schema_v1 = strawberry.Schema(Query, Mutation)
@@ -18,5 +18,4 @@ app.include_router(graphql_app_v1, prefix='/api/v1/users')
 
 @app.on_event('startup')
 async def on_startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    await init_db()

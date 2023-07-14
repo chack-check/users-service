@@ -2,7 +2,10 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
-from ..graphql.types import User, PaginatedUsersResponse, LoginData, Tokens, AuthData, UpdateData
+from ..graphql.graph_types import (
+    User, PaginatedUsersResponse, LoginData,
+    Tokens, AuthData, UpdateData
+)
 from ..crud import UsersQueries
 from ..exceptions import PasswordsNotMatch
 from .tokens import TokensSet
@@ -20,10 +23,13 @@ class UsersSet:
         self._tokens_set = TokensSet()
         self._sessions_set = SessionSet(redis_db)
 
-    async def get(self, *, id: int | None = None, username: str | None = None, email: str | None = None) -> User:
+    async def get(self, *, id: int | None = None,
+                  username: str | None = None,
+                  email: str | None = None) -> User:
         ...
 
-    async def all(self, *, query: str, page: int = 1, per_page: int = 20) -> PaginatedUsersResponse:
+    async def all(self, *, query: str, page: int = 1,
+                  per_page: int = 20) -> PaginatedUsersResponse:
         ...
 
     async def login(self, login_data: LoginData) -> Tokens:
@@ -36,7 +42,8 @@ class UsersSet:
     async def authenticate(self, auth_data: AuthData) -> Tokens:
         self._validate_passwords(auth_data.password, auth_data.password_repeat)
         password_hash = pwd_context.hash(auth_data.password)
-        db_user = await self._users_queries.create(auth_data, password=password_hash)
+        db_user = await self._users_queries.create(auth_data,
+                                                   password=password_hash)
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
         await self._sessions_set.create(db_user.id, refresh_token)

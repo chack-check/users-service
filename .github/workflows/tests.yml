@@ -1,0 +1,21 @@
+name: Users service tests
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build tests
+      run: docker compose -f docker-compose.test.yml build
+
+    - name: Run tests
+      run: docker compose -f docker-compose.test.yml run --rm app poetry run pytest

@@ -1,7 +1,7 @@
 import strawberry
 from strawberry.types import Info
 
-from .types import (
+from .graph_types import (
     User, PaginatedUsersResponse, LoginData, Tokens,
     AuthData, UpdateData, ChangePasswordData,
     ChangeEmailData
@@ -16,11 +16,13 @@ class Query:
         ...
 
     @strawberry.field
-    async def user(self, id: int | None = None, username: str | None = None, email: str | None = None) -> User:
+    async def user(self, id: int | None = None, username: str | None = None,
+                   email: str | None = None) -> User:
         ...
 
     @strawberry.field
-    async def users(self, query: str = '', page: int = 1, per_page: int = 20) -> PaginatedUsersResponse:
+    async def users(self, query: str = '', page: int = 1,
+                    per_page: int = 20) -> PaginatedUsersResponse:
         ...
 
 
@@ -46,9 +48,13 @@ class Mutation:
         ...
 
     @strawberry.mutation
-    async def update_password(change_password_data: ChangePasswordData) -> User:
+    async def update_password(
+        change_password_data: ChangePasswordData
+    ) -> User:
         ...
-    
+
     @strawberry.mutation
-    async def update_email(change_email_data: ChangeEmailData) -> User:
+    async def update_email(
+        change_email_data: ChangeEmailData
+    ) -> User:
         ...

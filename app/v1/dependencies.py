@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.fastapi import BaseContext
@@ -19,13 +21,19 @@ async def use_session() -> AsyncSession:
         await s.commit()
 
 
-def use_users_set(session: AsyncSession = Depends(use_session)):
+def use_users_set(
+        session: Annotated[AsyncSession, Depends(use_session)]
+):
     return UsersSet(session, redis_db)
 
 
-def use_custom_context(users_set: UsersSet = Depends(use_users_set)) -> CustomContext:
+def use_custom_context(
+        users_set: Annotated[UsersSet, Depends(use_users_set)]
+) -> CustomContext:
     return CustomContext(users_set)
 
 
-async def get_context(context: CustomContext = Depends(use_custom_context)) -> CustomContext:
+async def get_context(
+        context: Annotated[CustomContext, Depends(use_custom_context)]
+) -> CustomContext:
     return context

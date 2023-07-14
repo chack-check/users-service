@@ -1,11 +1,11 @@
-import  re
+import re
 from dataclasses import asdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import insert
 
-from .graphql.types import AuthData
+from .graphql.graph_types import AuthData
 from .schemas import DbUser
 from .models import User
 from .exceptions import (
@@ -23,9 +23,9 @@ def handle_unique_violation(func):
         except IntegrityError as e:
             field_name = re.search(r"\((.*)\)=\(.*\)", e.args[0]).group(1)
             exception = {
-                'username': UserWithThisUsernameAlreadyExists("User with this username alaready exists"),
-                'phone': UserWithThisPhoneAlreadyExists("User with this phone already exists"),
-                'email': UserWithThisEmailAlreadyExists("User with this email already exists"),
+                'username': UserWithThisUsernameAlreadyExists,
+                'phone': UserWithThisPhoneAlreadyExists,
+                'email': UserWithThisEmailAlreadyExists,
             }[field_name]
             raise exception
 

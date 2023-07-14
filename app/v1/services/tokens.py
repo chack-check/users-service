@@ -16,8 +16,17 @@ ALGORITHM = 'HS256'
 
 class TokensSet:
 
-    def create_token(self, user: DbUser, mode: Literal['refresh', 'access']) -> str:
-        exp_delta = ACCESS_TOKEN_EXP_DELTA if mode == 'access' else REFRESH_TOKEN_EXP_DELTA
+    def _get_exp_delta(
+            self, mode: Literal['refresh', 'access']
+    ) -> datetime.timedelta:
+        if mode == 'access':
+            return ACCESS_TOKEN_EXP_DELTA
+
+        return REFRESH_TOKEN_EXP_DELTA
+
+    def create_token(self, user: DbUser,
+                     mode: Literal['refresh', 'access']) -> str:
+        exp_delta = self._get_exp_delta(mode)
         exp = datetime.datetime.utcnow() + exp_delta
         encode_data = {'user_id': user.id, 'exp': exp}
         return jwt.encode(encode_data, settings.secret_key, ALGORITHM)
