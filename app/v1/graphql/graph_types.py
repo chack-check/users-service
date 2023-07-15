@@ -58,7 +58,7 @@ class UpdateData:
 
 @strawberry.input
 class LoginData:
-    email: EmailStr
+    phone_or_username: str
     password: str
 
 

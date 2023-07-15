@@ -1,6 +1,7 @@
 import strawberry
 from strawberry.types import Info
 
+from ..services.users import UsersSet
 from .graph_types import (
     User, PaginatedUsersResponse, LoginData, Tokens,
     AuthData, UpdateData, ChangePasswordData,
@@ -30,8 +31,10 @@ class Query:
 class Mutation:
 
     @strawberry.mutation
-    async def login(login_data: LoginData) -> Tokens:
-        ...
+    async def login(info: Info, login_data: LoginData) -> Tokens:
+        users_set: UsersSet = info.context.users_set
+        tokens = await users_set.login(login_data)
+        return tokens
 
     @strawberry.mutation
     async def authenticate(info: Info, auth_data: AuthData) -> Tokens:

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app.v1.schemas import DbUser, UserActivities
-from app.v1.graphql.graph_types import AuthData
+from app.v1.graphql.graph_types import AuthData, LoginData
 
 
 AUTH_USER_DATA = AuthData(
@@ -56,6 +56,30 @@ AUTH_USER_DATA_INVALID_PASSWORDS = AuthData(
     last_name='Ivanov',
     password='Password123$',
     password_repeat='Incorrect repeat password',
+)
+
+
+LOGIN_USER_DATA_USERNAME = LoginData(
+    phone_or_username='test',
+    password='Password123$'
+)
+
+
+LOGIN_USER_DATA_PHONE = LoginData(
+    phone_or_username='88005553535',
+    password='Password123$'
+)
+
+
+LOGIN_USER_DATA_INCORRECT_USERNAME = LoginData(
+    phone_or_username='incorrect',
+    password='Password123$'
+)
+
+
+LOGIN_USER_DATA_INCORRECT_PASSWORD = LoginData(
+    phone_or_username='test',
+    password='incorrect password'
 )
 
 

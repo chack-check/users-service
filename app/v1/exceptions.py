@@ -9,6 +9,13 @@ class PasswordsNotMatch(Exception):
         super().__init__(message)
 
 
+class IncorrectPassword(Exception):
+
+    def __init__(self,
+                 message: str = 'Password is incorrect'):
+        super().__init__(message)
+
+
 class UserWithThisEmailAlreadyExists(Exception):
 
     def __init__(self,
@@ -27,4 +34,12 @@ class UserWithThisPhoneAlreadyExists(Exception):
 
     def __init__(self,
                  message: str = 'User with this phone already exists'):
+        super().__init__(message)
+
+
+class UserDoesNotExist(Exception):
+
+    def __init__(self,
+                 message: str = ('User with this phone or '
+                                 'username does not exist')):
         super().__init__(message)

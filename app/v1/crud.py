@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import insert
+from sqlalchemy import insert, select, or_
 
 from .graphql.graph_types import AuthData
 from .schemas import DbUser
@@ -12,6 +12,7 @@ from .exceptions import (
     UserWithThisEmailAlreadyExists,
     UserWithThisPhoneAlreadyExists,
     UserWithThisUsernameAlreadyExists,
+    UserDoesNotExist,
 )
 
 
@@ -36,6 +37,17 @@ class UsersQueries:
 
     def __init__(self, session: AsyncSession):
         self._session = session
+
+    async def get(self, id: int | None = None,
+                  phone_or_username: str | None = None) -> DbUser:
+        stmt = select(User).where(or_(User.phone == phone_or_username,
+                                      User.username == phone_or_username))
+        result = await self._session.execute(stmt)
+        db_users = result.fetchone()
+        if not db_users:
+            raise UserDoesNotExist
+
+        return DbUser.model_validate(db_users[0])
 
     @handle_unique_violation
     async def create(self, user_data: AuthData, password: str) -> DbUser:

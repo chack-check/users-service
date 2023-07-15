@@ -7,7 +7,10 @@ from ..graphql.graph_types import (
     Tokens, AuthData, UpdateData
 )
 from ..crud import UsersQueries
-from ..exceptions import PasswordsNotMatch
+from ..exceptions import (
+    PasswordsNotMatch,
+    IncorrectPassword
+)
 from .tokens import TokensSet
 from .sessions import SessionSet
 
@@ -32,8 +35,19 @@ class UsersSet:
                   per_page: int = 20) -> PaginatedUsersResponse:
         ...
 
+    def _verify_password(self, password: str, hash_: str) -> None:
+        if not pwd_context.verify(password, hash_):
+            raise IncorrectPassword
+
     async def login(self, login_data: LoginData) -> Tokens:
-        ...
+        db_user = await self._users_queries.get(
+            phone_or_username=login_data.phone_or_username
+        )
+        self._verify_password(login_data.password, db_user.password)
+        access_token = self._tokens_set.create_token(db_user, mode='access')
+        refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
+        await self._sessions_set.create(db_user.id, refresh_token)
+        return Tokens(access_token=access_token, refresh_token=refresh_token)
 
     def _validate_passwords(self, password1: str, password2: str):
         if password1 != password2:
