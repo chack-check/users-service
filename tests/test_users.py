@@ -12,6 +12,7 @@ from app.v1.exceptions import (
     UserWithThisPhoneAlreadyExists,
     UserDoesNotExist,
     IncorrectPassword,
+    IncorrectToken,
 )
 from .base import (
     AUTH_USER_DATA,
@@ -120,3 +121,96 @@ async def test_login_user_incorrect_password(users_set: UsersSet):
 
     with pytest.raises(IncorrectPassword):
         await users_set.login(LOGIN_USER_DATA_INCORRECT_PASSWORD)
+
+
+@pytest.mark.asyncio
+async def test_get_by_username(users_set: UsersSet):
+    password_hash = pwd_context.hash(AUTH_USER_DATA.password)
+    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict['password'] = password_hash
+    del auth_dict['password_repeat']
+    stmt = insert(User).values(**auth_dict)
+    await users_set._users_queries._session.execute(stmt)
+
+    user = await users_set.get(username=AUTH_USER_DATA.username)
+    assert user.username == AUTH_USER_DATA.username
+
+
+@pytest.mark.asyncio
+async def test_get_by_id(users_set: UsersSet):
+    password_hash = pwd_context.hash(AUTH_USER_DATA.password)
+    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict['password'] = password_hash
+    del auth_dict['password_repeat']
+    stmt = insert(User).returning(User.id).values(**auth_dict)
+    result = await users_set._users_queries._session.execute(stmt)
+    id = result.fetchone()[0]
+
+    user = await users_set.get(id=id)
+    assert user.id == id
+
+
+@pytest.mark.asyncio
+async def test_get_by_email(users_set: UsersSet):
+    password_hash = pwd_context.hash(AUTH_USER_DATA.password)
+    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict['password'] = password_hash
+    del auth_dict['password_repeat']
+    stmt = insert(User).values(**auth_dict)
+    await users_set._users_queries._session.execute(stmt)
+
+    user = await users_set.get(email=AUTH_USER_DATA.email)
+    assert user.email == AUTH_USER_DATA.email
+
+
+@pytest.mark.asyncio
+async def test_get_by_phone(users_set: UsersSet):
+    password_hash = pwd_context.hash(AUTH_USER_DATA.password)
+    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict['password'] = password_hash
+    del auth_dict['password_repeat']
+    stmt = insert(User).values(**auth_dict)
+    await users_set._users_queries._session.execute(stmt)
+
+    user = await users_set.get(phone=AUTH_USER_DATA.phone)
+    assert user.phone == AUTH_USER_DATA.phone
+
+
+@pytest.mark.asyncio
+async def test_get_with_many_fields(users_set: UsersSet):
+    with pytest.raises(AssertionError):
+        await users_set.get(phone='phone', email='email')
+
+
+@pytest.mark.asyncio
+async def test_get_with_noone_field(users_set: UsersSet):
+    with pytest.raises(AssertionError):
+        await users_set.get()
+
+
+@pytest.mark.asyncio
+async def test_get_from_token(users_set: UsersSet):
+    password_hash = pwd_context.hash(AUTH_USER_DATA.password)
+    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict['password'] = password_hash
+    del auth_dict['password_repeat']
+    stmt = insert(User).returning(User.id).values(**auth_dict)
+    result = await users_set._users_queries._session.execute(stmt)
+    id = result.fetchone()[0]
+
+    tokens = await users_set.login(LOGIN_USER_DATA_USERNAME)
+
+    user = await users_set.get_from_token(tokens.access_token)
+    assert id == user.id
+
+
+@pytest.mark.asyncio
+async def test_get_from_token_with_incorrect_token_without_raise_exception(users_set: UsersSet):
+    user_id = await users_set.get_from_token('incorrect_token', raise_exception=False)
+    assert user_id is None
+
+
+@pytest.mark.asyncio
+async def test_get_from_token_with_incorrect_token_with_raise_exception(users_set: UsersSet):
+    with pytest.raises(IncorrectToken):
+        await users_set.get_from_token('incorrect_token', raise_exception=True)

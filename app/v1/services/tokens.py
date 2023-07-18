@@ -1,9 +1,10 @@
 from typing import Literal
 import datetime
 
-from jose import jwt
+from jose import jwt, JWTError
 
 from ..schemas import DbUser
+from ..exceptions import IncorrectToken
 from app.project.settings import settings
 
 
@@ -31,5 +32,11 @@ class TokensSet:
         encode_data = {'user_id': user.id, 'exp': exp}
         return jwt.encode(encode_data, settings.secret_key, ALGORITHM)
 
-    def verify_token(self, user: DbUser, token: str) -> bool:
-        ...
+    def decode_token(self, token: str) -> int:
+        try:
+            payload = jwt.decode(token, settings.secret_key,
+                                 algorithms=[ALGORITHM])
+            assert payload['exp'] > datetime.datetime.utcnow().timestamp()
+            return payload['user_id']
+        except (AssertionError, KeyError, JWTError):
+            raise IncorrectToken

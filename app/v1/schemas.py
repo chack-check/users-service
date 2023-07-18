@@ -27,12 +27,7 @@ class DbUser(BaseUser):
     activity: UserActivities
     status: str | None = None
     last_seen: datetime
+    email_confirmed: bool = False
+    phone_confirmed: bool = False
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class UserOut(BaseUser):
-    id: int
-    activity: UserActivities
-    status: str | None = None
-    last_seen: datetime

@@ -9,8 +9,12 @@ from ..graphql.graph_types import (
 from ..crud import UsersQueries
 from ..exceptions import (
     PasswordsNotMatch,
-    IncorrectPassword
+    IncorrectPassword,
+    IncorrectToken,
+    UserDoesNotExist,
 )
+from ..schemas import DbUser
+from ..utils import get_schema_from_pydantic
 from .tokens import TokensSet
 from .sessions import SessionSet
 
@@ -28,8 +32,33 @@ class UsersSet:
 
     async def get(self, *, id: int | None = None,
                   username: str | None = None,
-                  email: str | None = None) -> User:
-        ...
+                  email: str | None = None,
+                  phone: str | None = None) -> User:
+        assert any((id, username, email, phone)), "Specify get field"
+        assert len(list(filter(bool, (id, username, email, phone)))) == 1, (
+            "You can specify only one get field"
+        )
+        if id:
+            user = await self._users_queries.get_by_id(id)
+        elif username:
+            user = await self._users_queries.get_by_username(username)
+        elif email:
+            user = await self._users_queries.get_by_email(email)
+        else:
+            user = await self._users_queries.get_by_phone(phone)
+
+        return get_schema_from_pydantic(User, user)
+
+    async def get_from_token(self, token: str, *,
+                             raise_exception: bool = True) -> DbUser | None:
+        try:
+            user_id = self._tokens_set.decode_token(token)
+            return await self._users_queries.get_by_id(user_id)
+        except (IncorrectToken, UserDoesNotExist):
+            if raise_exception:
+                raise
+
+            return None
 
     async def all(self, *, query: str, page: int = 1,
                   per_page: int = 20) -> PaginatedUsersResponse:
@@ -40,8 +69,8 @@ class UsersSet:
             raise IncorrectPassword
 
     async def login(self, login_data: LoginData) -> Tokens:
-        db_user = await self._users_queries.get(
-            phone_or_username=login_data.phone_or_username
+        db_user = await self._users_queries.get_by_phone_or_username(
+            login_data.phone_or_username
         )
         self._verify_password(login_data.password, db_user.password)
         access_token = self._tokens_set.create_token(db_user, mode='access')

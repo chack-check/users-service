@@ -6,6 +6,7 @@ from .base import TOKEN_USER
 from app.v1.services.tokens import (
     TokensSet, ALGORITHM, ACCESS_TOKEN_EXP_DELTA, REFRESH_TOKEN_EXP_DELTA
 )
+from app.v1.exceptions import IncorrectToken
 from app.project.settings import settings
 
 
@@ -31,3 +32,34 @@ async def test_create_refresh_token(tokens_set: TokensSet):
 
     assert token_data['user_id'] == TOKEN_USER.id
     assert token_data['exp'] == int((datetime.datetime.utcnow() + REFRESH_TOKEN_EXP_DELTA).timestamp())
+
+
+@pytest.mark.asyncio
+async def test_decode_token(tokens_set: TokensSet):
+    data = {'user_id': 1, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}
+    token = jwt.encode(data, settings.secret_key, ALGORITHM)
+    decoded_token_user_id = tokens_set.decode_token(token)
+
+    assert decoded_token_user_id == data['user_id']
+
+
+@pytest.mark.asyncio
+async def test_decode_expired_token(tokens_set: TokensSet):
+    data = {'user_id': 1, 'exp': datetime.datetime.utcnow() - datetime.timedelta(minutes=30)}
+    token = jwt.encode(data, settings.secret_key, ALGORITHM)
+    with pytest.raises(IncorrectToken):
+        tokens_set.decode_token(token)
+
+
+@pytest.mark.asyncio
+async def test_decode_incorrect_token_data(tokens_set: TokensSet):
+    data = {'smth': 1, 'exp': datetime.datetime.utcnow() - datetime.timedelta(minutes=30)}
+    token = jwt.encode(data, settings.secret_key, ALGORITHM)
+    with pytest.raises(IncorrectToken):
+        tokens_set.decode_token(token)
+
+
+@pytest.mark.asyncio
+async def test_decode_incorrect_token(tokens_set: TokensSet):
+    with pytest.raises(IncorrectToken):
+        tokens_set.decode_token('incorrect_token')

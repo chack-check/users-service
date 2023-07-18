@@ -1,36 +1,13 @@
-import re
 from dataclasses import asdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import insert, select, or_
+from sqlalchemy import insert, select, or_, Select
 
 from .graphql.graph_types import AuthData
 from .schemas import DbUser
 from .models import User
-from .exceptions import (
-    UserWithThisEmailAlreadyExists,
-    UserWithThisPhoneAlreadyExists,
-    UserWithThisUsernameAlreadyExists,
-    UserDoesNotExist,
-)
-
-
-def handle_unique_violation(func):
-
-    async def wrapper(*args, **kwargs):
-        try:
-            return await func(*args, **kwargs)
-        except IntegrityError as e:
-            field_name = re.search(r"\((.*)\)=\(.*\)", e.args[0]).group(1)
-            exception = {
-                'username': UserWithThisUsernameAlreadyExists,
-                'phone': UserWithThisPhoneAlreadyExists,
-                'email': UserWithThisEmailAlreadyExists,
-            }[field_name]
-            raise exception
-
-    return wrapper
+from .exceptions import UserDoesNotExist
+from .utils import handle_unique_violation
 
 
 class UsersQueries:
@@ -38,16 +15,37 @@ class UsersQueries:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get(self, id: int | None = None,
-                  phone_or_username: str | None = None) -> DbUser:
-        stmt = select(User).where(or_(User.phone == phone_or_username,
-                                      User.username == phone_or_username))
+    async def _get_user_by_stmt(self, stmt: Select[tuple[User]]) -> DbUser:
         result = await self._session.execute(stmt)
         db_users = result.fetchone()
         if not db_users:
             raise UserDoesNotExist
 
         return DbUser.model_validate(db_users[0])
+
+    async def get_by_phone_or_username(
+            self,
+            phone_or_username: str
+    ) -> DbUser:
+        stmt = select(User).where(or_(User.phone == phone_or_username,
+                                      User.username == phone_or_username))
+        return await self._get_user_by_stmt(stmt)
+
+    async def get_by_id(self, id: int) -> DbUser:
+        stmt = select(User).where(User.id == id)
+        return await self._get_user_by_stmt(stmt)
+
+    async def get_by_username(self, username: str) -> DbUser:
+        stmt = select(User).where(User.username == username)
+        return await self._get_user_by_stmt(stmt)
+
+    async def get_by_email(self, email: str) -> DbUser:
+        stmt = select(User).where(User.email == email)
+        return await self._get_user_by_stmt(stmt)
+
+    async def get_by_phone(self, phone: str) -> DbUser:
+        stmt = select(User).where(User.phone == phone)
+        return await self._get_user_by_stmt(stmt)
 
     @handle_unique_violation
     async def create(self, user_data: AuthData, password: str) -> DbUser:

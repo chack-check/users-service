@@ -43,3 +43,17 @@ class UserDoesNotExist(Exception):
                  message: str = ('User with this phone or '
                                  'username does not exist')):
         super().__init__(message)
+
+
+class IncorrectToken(Exception):
+
+    def __init__(self,
+                 message: str = 'Incorrect token'):
+        super().__init__(message)
+
+
+class AuthRequired(Exception):
+
+    def __init__(self,
+                 message: str = 'Authentication required'):
+        super().__init__(message)
