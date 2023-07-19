@@ -62,14 +62,16 @@ class UsersSet:
 
     async def search(self, *, query: str, page: int = 1,
                      per_page: int = 20) -> PaginatedUsersResponse:
-        users, page, num_pages = await self._users_queries.search(
+        paginated_users = await self._users_queries.search(
             query, page, per_page
         )
-        users_schemas = [get_schema_from_pydantic(User, u) for u in users]
+        users_schemas = [
+            get_schema_from_pydantic(User, u) for u in paginated_users.data
+        ]
         return PaginatedUsersResponse(
-            page=page,
-            num_pages=num_pages,
-            per_page=per_page,
+            page=paginated_users.page,
+            num_pages=paginated_users.num_pages,
+            per_page=paginated_users.per_page,
             data=users_schemas
         )
 
