@@ -34,9 +34,15 @@ class Query:
         )
 
     @strawberry.field
-    async def users(self, query: str = '', page: int = 1,
+    async def users(self,
+                    info: CustomInfo,
+                    query: str = '',
+                    page: int = 1,
                     per_page: int = 20) -> PaginatedUsersResponse:
-        ...
+        validate_user_required(info.context.user)
+        return await info.context.users_set.search(
+            query=query, page=page, per_page=per_page
+        )
 
 
 @strawberry.type

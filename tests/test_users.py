@@ -1,3 +1,4 @@
+import math
 from dataclasses import asdict
 
 import pytest
@@ -24,6 +25,7 @@ from .base import (
     LOGIN_USER_DATA_INCORRECT_USERNAME,
     LOGIN_USER_DATA_PHONE,
     LOGIN_USER_DATA_USERNAME,
+    MANY_USERS_DATA,
 )
 
 
@@ -214,3 +216,77 @@ async def test_get_from_token_with_incorrect_token_without_raise_exception(users
 async def test_get_from_token_with_incorrect_token_with_raise_exception(users_set: UsersSet):
     with pytest.raises(IncorrectToken):
         await users_set.get_from_token('incorrect_token', raise_exception=True)
+
+
+@pytest.mark.asyncio
+async def test_search_users(users_set: UsersSet):
+    await users_set._users_queries._session.execute(insert(User), MANY_USERS_DATA)
+
+    data = await users_set.search(query='ivan')
+
+    assert data.page == 1
+    assert data.per_page == 20
+    assert data.num_pages == math.ceil(len(MANY_USERS_DATA) / 20)
+    assert len(data.data) == 20
+
+
+@pytest.mark.asyncio
+async def test_search_users_with_page(users_set: UsersSet):
+    await users_set._users_queries._session.execute(insert(User), MANY_USERS_DATA)
+
+    data = await users_set.search(query='', page=2)
+
+    assert data.page == 2
+    assert data.per_page == 20
+    assert data.num_pages == math.ceil(len(MANY_USERS_DATA) / 20)
+    assert len(data.data) == 20
+    assert data.data[0].username == 'test20'
+
+
+@pytest.mark.asyncio
+async def test_search_users_with_num_pages(users_set: UsersSet):
+    await users_set._users_queries._session.execute(insert(User), MANY_USERS_DATA)
+
+    data = await users_set.search(query='', per_page=50)
+
+    assert data.page == 1
+    assert data.per_page == 50
+    assert data.num_pages == math.ceil(len(MANY_USERS_DATA) / 50)
+    assert len(data.data) == 50
+
+
+@pytest.mark.asyncio
+async def test_search_concrete_user_by_first_name(users_set: UsersSet):
+    await users_set._users_queries._session.execute(insert(User), MANY_USERS_DATA)
+
+    data = await users_set.search(query='test39')
+
+    assert data.page == 1
+    assert data.per_page == 20
+    assert data.num_pages == 1
+    assert len(data.data) == 1
+    assert data.data[0].username == 'test39'
+
+
+@pytest.mark.asyncio
+async def test_search_with_zero_page(users_set: UsersSet):
+    await users_set._users_queries._session.execute(insert(User), MANY_USERS_DATA)
+
+    data = await users_set.search(query='', page=0)
+
+    assert data.page == 1
+    assert data.per_page == 20
+    assert data.num_pages == math.ceil(len(MANY_USERS_DATA) / 20)
+    assert len(data.data) == 20
+
+
+@pytest.mark.asyncio
+async def test_search_with_incorrect_page(users_set: UsersSet):
+    await users_set._users_queries._session.execute(insert(User), MANY_USERS_DATA)
+
+    data = await users_set.search(query='', page=2931)
+
+    assert data.page == 1
+    assert data.per_page == 20
+    assert data.num_pages == math.ceil(len(MANY_USERS_DATA) / 20)
+    assert len(data.data) == 20

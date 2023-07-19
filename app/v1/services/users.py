@@ -60,9 +60,18 @@ class UsersSet:
 
             return None
 
-    async def all(self, *, query: str, page: int = 1,
-                  per_page: int = 20) -> PaginatedUsersResponse:
-        ...
+    async def search(self, *, query: str, page: int = 1,
+                     per_page: int = 20) -> PaginatedUsersResponse:
+        users, page, num_pages = await self._users_queries.search(
+            query, page, per_page
+        )
+        users_schemas = [get_schema_from_pydantic(User, u) for u in users]
+        return PaginatedUsersResponse(
+            page=page,
+            num_pages=num_pages,
+            per_page=per_page,
+            data=users_schemas
+        )
 
     def _verify_password(self, password: str, hash_: str) -> None:
         if not pwd_context.verify(password, hash_):

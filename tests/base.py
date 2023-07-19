@@ -107,3 +107,15 @@ TOKEN_USER = DbUser(
     activity=UserActivities.online,
     last_seen=datetime.utcnow()
 )
+
+
+MANY_USERS_DATA = [
+    {
+        'email': f'test{i}@mail.com',
+        'username': f'test{i}',
+        'phone': f'880055535{i}',
+        'first_name': 'Ivan',
+        'last_name': 'Ivanov',
+        'password': 'some_password_hash',
+    } for i in range(50)
+]
