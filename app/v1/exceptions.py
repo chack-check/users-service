@@ -57,3 +57,25 @@ class AuthRequired(Exception):
     def __init__(self,
                  message: str = 'Authentication required'):
         super().__init__(message)
+
+
+class IncorrectVerificationSource(Exception):
+
+    def __init__(self,
+                 message: str = 'You need to specify email or phone'):
+        super().__init__(message)
+
+
+class IncorrectVerificationCode(Exception):
+
+    def __init__(self,
+                 message: str = 'Incorrect verification code'):
+        super().__init__(message)
+
+
+class VerificationAttemptsExpired(Exception):
+
+    def __init__(self,
+                 message: str = ('Verification attempts expired.'
+                                 ' Try to resend code')):
+        super().__init__(message)

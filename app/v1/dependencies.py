@@ -8,6 +8,7 @@ from strawberry.fastapi import BaseContext
 from app.project.db import session
 from app.project.redis import redis_db
 from .services.users import UsersSet
+from .services.verifications import Verificator
 from .schemas import DbUser
 
 
@@ -16,9 +17,14 @@ oauth2_scheme = HTTPBearer(auto_error=False)
 
 class CustomContext(BaseContext):
 
-    def __init__(self, users_set: UsersSet, user: DbUser | None):
+    def __init__(self, users_set: UsersSet,
+                 verificator: Verificator,
+                 user: DbUser | None,
+                 token: str | None):
         self.users_set = users_set
+        self.verificator = verificator
         self.user = user
+        self.token = token
 
 
 async def use_session() -> AsyncSession:
@@ -31,6 +37,10 @@ def use_users_set(
         session: Annotated[AsyncSession, Depends(use_session)]
 ) -> UsersSet:
     return UsersSet(session, redis_db)
+
+
+def use_verificator() -> Verificator:
+    return Verificator()
 
 
 async def current_user(
@@ -47,9 +57,15 @@ async def current_user(
 
 def use_custom_context(
         users_set: Annotated[UsersSet, Depends(use_users_set)],
+        verificator: Annotated[Verificator, Depends(use_verificator)],
+        credentials: Annotated[HTTPAuthorizationCredentials | None,
+                               Security(oauth2_scheme)],
         user: Annotated[DbUser | None, Depends(current_user)],
 ) -> CustomContext:
-    return CustomContext(users_set, user)
+    return CustomContext(
+        users_set, verificator, user,
+        credentials.credentials if credentials else None
+    )
 
 
 async def get_context(

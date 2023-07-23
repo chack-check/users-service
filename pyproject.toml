@@ -6,7 +6,7 @@ authors = ["artemowkin <artyom.groshev2017@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 fastapi = "^0.100.0"
 strawberry-graphql = {extras = ["fastapi"], version = "^0.194.4"}
 uvicorn = "^0.22.0"
@@ -18,6 +18,7 @@ psycopg-binary = "^3.1.9"
 psycopg = "^3.1.9"
 python-jose = "^3.3.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+jinja2 = "^3.1.2"
 
 
 [tool.poetry.group.test.dependencies]

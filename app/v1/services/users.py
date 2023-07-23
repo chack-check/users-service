@@ -109,8 +109,18 @@ class UsersSet:
     async def logout(self, user_id: int):
         ...
 
-    async def refresh(self, user_id: int, refresh_token: str) -> Tokens:
-        ...
+    async def refresh(self, user: DbUser, refresh_token: str) -> Tokens:
+        has_session = await self._sessions_set.has_user_session(
+            user.id, refresh_token
+        )
+        if not has_session:
+            raise IncorrectToken
+
+        new_access_token = self._tokens_set.create_token(user, mode='access')
+        return Tokens(
+            access_token=new_access_token,
+            refresh_token=refresh_token,
+        )
 
     async def logout_all(self, user_id: int):
         ...

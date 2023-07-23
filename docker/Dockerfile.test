@@ -13,4 +13,5 @@ COPY pyproject.toml poetry.lock /src/
 RUN poetry install --with test --no-interaction --no-ansi
 
 COPY app/ /src/app
+COPY templates/ /src/templates
 COPY tests /src/tests

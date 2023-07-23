@@ -20,6 +20,12 @@ class UserActivities(Enum):
     away = 'away'
 
 
+@strawberry.enum
+class VerificationSources(Enum):
+    email = 'email'
+    phone = 'phone'
+
+
 @strawberry.type
 class User:
     id: int
@@ -34,6 +40,11 @@ class User:
     email_confirmed: bool
     phone_confirmed: bool
     last_seen: datetime
+
+
+@strawberry.type
+class VerificationSended:
+    sended: bool
 
 
 @strawberry.input
