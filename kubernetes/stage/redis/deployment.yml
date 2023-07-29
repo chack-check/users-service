@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-cluster
+  name: users-redis-deployment
 spec:
   replicas: 6
   selector:
@@ -10,7 +10,7 @@ spec:
   template:
     metadata:
       labels:
-        app: redis-cluster
+        app: users-redis-db
     spec:
       containers:
       - name: redis
