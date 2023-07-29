@@ -45,7 +45,7 @@ spec:
               value: mailhog-service
 
             - name: USERS_SERVICE_SMTP_PORT
-              value: 1025
+              value: "1025"
 
             - name: USERS_SERVICE_SMTP_FROM
               value: info@chack-check.ru
