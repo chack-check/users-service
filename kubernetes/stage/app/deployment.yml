@@ -4,6 +4,7 @@ metadata:
   name: chack-users-service-deployment
   labels:
     app: chack-users-service
+    name: chack-users-service
 spec:
   replicas: 1
   selector:
