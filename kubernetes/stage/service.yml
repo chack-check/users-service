@@ -7,8 +7,10 @@ spec:
     app.kubernetes.io/name: chack-users-service
   ports:
     - protocol: TCP
+      name: app-port
       port: 8000
       targetPort: 8000
     - protocol: TCP
+      name: db-port
       port: 5432
       targetPort: 5432
