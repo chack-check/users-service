@@ -21,4 +21,4 @@ spec:
         - containerPort: 8000
         envFrom:
         - configMapRef:
-          name: chack-users-service-config
+            name: chack-users-service-config
