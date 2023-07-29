@@ -8,7 +8,7 @@ spec:
   - host: stage.chack-check.ru
     http:
       paths:
-      - path: /api/users/
+      - path: /api/v1/users/
         pathType: Prefix
         backend:
           service:
