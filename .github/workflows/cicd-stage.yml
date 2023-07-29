@@ -73,8 +73,8 @@ jobs:
         with:
           namespace: stage
           manifests:
-            kubernetes/deployment.yml
-            kubernetes/ingress.yml
-            kubernetes/service.yml
+            kubernetes/stage/deployment.yml
+            kubernetes/stage/ingress.yml
+            kubernetes/stage/service.yml
           images: |
             ${{ secrets.DOCKERHUB_USERNAME }}/chack-users-service:${{ github.sha }}

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chack-users-service-deployment
+  labels:
+    app: chack-users-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: chack-users-service
+  template:
+    metadata:
+      labels:
+        app: chack-users-service
+    spec:
+      containers:
+      - name: chack-users-service
+        image: artemowkin/chack-users-service:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+          name: chack-users-service-config

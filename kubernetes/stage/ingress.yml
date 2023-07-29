@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chack-users-service-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: stage.chack-check.ru
+    http:
+      paths:
+      - path: /api/users/
+        pathType: Prefix
+        backend:
+          service:
+            name: chack-users-service
+            port:
+              number: 8000
