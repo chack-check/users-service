@@ -4,7 +4,7 @@ metadata:
   name: chack-users-service
 spec:
   selector:
-    app.kubernetes.io/name: chack-users-service
+    app: chack-users-service
   ports:
     - protocol: TCP
       port: 8000
