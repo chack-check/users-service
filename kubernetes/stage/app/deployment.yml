@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chack-users-service-deployment
+  labels:
+    app: chack-users-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chack-users-service
+  template:
+    metadata:
+      labels:
+        app: chack-users-service
+    spec:
+      containers:
+        - name: chack-users-service
+          image: artemowkin/chack-users-service:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: USERS_SERVICE_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: database_url
+
+            - name: USERS_SERVICE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: secret_key
+
+            - name: USERS_SERVICE_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: redis_url
+
+            - name: USERS_SERVICE_ALLOW_ORIGINS
+              value: "[\"stage.chack-check.ru\"]"
+
+            - name: USERS_SERVICE_SMTP_HOST
+              value: mailhog-service
+
+            - name: USERS_SERVICE_SMTP_PORT
+              value: 1025
+
+            - name: USERS_SERVICE_SMTP_FROM
+              value: info@chack-check.ru

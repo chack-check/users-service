@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cluster
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: users-redis-db
+  template:
+    metadata:
+      labels:
+        app: redis-cluster
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+          name: client
+        - containerPort: 16379
+          name: gossip
+        volumeMounts:
+        - name: data
+          mountPath: /data
+          readOnly: false
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: redis-persistent-volume-claim

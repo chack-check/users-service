@@ -68,13 +68,26 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Deploy to the Kubernetes cluster
+      - name: Deploy app dependencies
         uses: azure/k8s-deploy@v1
         with:
           namespace: stage
           manifests: |
-            kubernetes/stage/deployment.yml
-            kubernetes/stage/ingress.yml
-            kubernetes/stage/service.yml
+            kubernetes/stage/db/deployment.yml
+            kubernetes/stage/db/service.yml
+            kubernetes/stage/redis/deployment.yml
+            kubernetes/stage/redis/service.yml
+            kubernetes/stage/mailhog/deployment.yml
+            kubernetes/stage/mailhog/service.yml
+            kubernetes/stage/mailhog/ingress.yml
+
+      - name: Deploy app
+        uses: azure/k8s-deploy@v1
+        with:
+          namespace: stage
+          manifests: |
+            kubernetes/stage/app/deployment.yml
+            kubernetes/stage/app/service.yml
+            kubernetes/stage/app/ingress.yml
           images: |
             ${{ secrets.DOCKERHUB_USERNAME }}/chack-users-service:${{ github.sha }}
