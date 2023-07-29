@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: chack-users-service-ingress
+  labels:
+    app: chack-users-service
 spec:
   ingressClassName: nginx
   rules:
@@ -14,4 +16,4 @@ spec:
           service:
             name: chack-users-service
             port:
-              number: 8000
+              number: 80
