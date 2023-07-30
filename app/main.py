@@ -1,3 +1,6 @@
+import threading
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import strawberry
@@ -5,6 +8,7 @@ from strawberry.fastapi import GraphQLRouter
 
 from app.v1.dependencies import get_context
 from app.v1.graphql.base import Query, Mutation
+from app.v1.grpc import start_server
 from app.project.db import init_db
 from app.project.settings import settings
 
@@ -26,6 +30,15 @@ app.add_middleware(
 app.include_router(graphql_app_v1, prefix='/api/v1/users')
 
 
+def execute_protobuf_server():
+    new_loop = asyncio.new_event_loop()
+    new_loop.run_until_complete(start_server())
+
+
 @app.on_event('startup')
 async def on_startup():
+    # thread = threading.Thread(target=execute_protobuf_server)
+    # thread.start()
+    loop = asyncio.get_running_loop()
+    asyncio.run_coroutine_threadsafe(start_server(), loop)
     await init_db()
