@@ -1,4 +1,3 @@
-import threading
 import asyncio
 
 from fastapi import FastAPI
@@ -28,11 +27,6 @@ app.add_middleware(
 )
 
 app.include_router(graphql_app_v1, prefix='/api/v1/users')
-
-
-def execute_protobuf_server():
-    new_loop = asyncio.new_event_loop()
-    new_loop.run_until_complete(start_server())
 
 
 @app.on_event('startup')
