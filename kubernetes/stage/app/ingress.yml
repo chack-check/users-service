@@ -8,7 +8,7 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-      - stage.chack-check.ru
+      - chack-check.ru
     secretName: chack-check-tls
   rules:
   - host: stage.chack-check.ru
