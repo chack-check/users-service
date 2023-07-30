@@ -2,8 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: chack-mailhog-service-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+      - mailhog.chack-check.ru
+    secretName: letsencrypt
   rules:
   - host: mailhog.chack-check.ru
     http:
