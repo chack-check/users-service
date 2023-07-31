@@ -3,6 +3,7 @@ import strawberry
 from strawberry.types import Info
 
 from ..services.users import UsersSet
+from ..services.verifications import verify_signature
 from ..senders.email import EmailSender
 from ..senders.phone import PhoneSender
 from ..dependencies import CustomContext
@@ -61,9 +62,11 @@ class Mutation:
     @strawberry.mutation
     async def send_verification_code(
         info: CustomInfo,
+        signature: str,
         phone: str | None = None,
         email: str | None = None,
     ) -> VerificationSended:
+        verify_signature(phone or email, signature)
         if not any((phone, email)) or all((phone, email)):
             raise IncorrectVerificationSource
 

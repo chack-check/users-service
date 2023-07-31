@@ -1,3 +1,5 @@
+import hmac
+import hashlib
 import random
 
 from app.project.settings import settings
@@ -5,7 +7,16 @@ from app.project.redis import redis_db
 from app.v1.exceptions import (
     VerificationAttemptsExpired,
     IncorrectVerificationCode,
+    IncorrectSignature,
 )
+
+
+def verify_signature(phone_or_email: str, signature: str):
+    generated_signature = hmac.new(
+        settings.secret_key.encode(), phone_or_email.encode(), hashlib.sha256
+    ).hexdigest()
+    if generated_signature != signature:
+        raise IncorrectSignature
 
 
 class Verificator:

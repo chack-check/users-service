@@ -80,3 +80,10 @@ class VerificationAttemptsExpired(Exception):
                  message: str = ('Verification attempts expired.'
                                  ' Try to resend code')):
         super().__init__(message)
+
+
+class IncorrectSignature(Exception):
+
+    def __init__(self,
+                 message: str = ('Incorrect signature')):
+        super().__init__(message)
