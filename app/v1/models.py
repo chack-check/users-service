@@ -1,6 +1,8 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.types import DateTime, TIMESTAMP
 
 from app.project.db import Base
 from .schemas import UserActivities
@@ -21,4 +23,7 @@ class User(Base):
     status: Mapped[str | None] = mapped_column(nullable=True)
     email_confirmed: Mapped[bool] = mapped_column(default=False)
     phone_confirmed: Mapped[bool] = mapped_column(default=False)
-    last_seen: Mapped[datetime] = mapped_column(default=datetime.utcnow())
+    last_seen: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        default=datetime.utcnow().astimezone(ZoneInfo('UTC')),
+    )

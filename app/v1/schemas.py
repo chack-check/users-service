@@ -2,7 +2,12 @@ from enum import Enum
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    AwareDatetime,
+)
 
 
 class UserActivities(str, Enum):
@@ -26,7 +31,7 @@ class DbUser(BaseUser):
     id: int
     activity: UserActivities
     status: str | None = None
-    last_seen: datetime
+    last_seen: AwareDatetime
     email_confirmed: bool = False
     phone_confirmed: bool = False
 

@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Any
 from dataclasses import asdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +26,8 @@ class UsersQueries:
         if not db_users:
             raise UserDoesNotExist
 
-        return DbUser.model_validate(db_users[0])
+        user: User = db_users[0]
+        return DbUser.model_validate(user)
 
     async def get_by_phone_or_username(
             self,
@@ -52,17 +53,28 @@ class UsersQueries:
         stmt = select(User).where(User.phone == phone)
         return await self._get_user_by_stmt(stmt)
 
-    @handle_unique_violation
-    async def create(
-            self, user_data: AuthData, password: str,
+    def _get_creation_data(
+            self,
+            user_data: AuthData,
+            password: str,
             field_confirmed: Literal['email', 'phone'] | None = None
-    ) -> DbUser:
+    ) -> dict[str, Any]:
         values = asdict(user_data)
         values['password'] = password
         if field_confirmed:
             values[f"{field_confirmed}_confirmed"] = True
 
         del values['password_repeat']
+        return values
+
+    @handle_unique_violation
+    async def create(
+            self, user_data: AuthData, password: str,
+            field_confirmed: Literal['email', 'phone'] | None = None
+    ) -> DbUser:
+        values = self._get_creation_data(
+            user_data, password, field_confirmed
+        )
         stmt = insert(User).returning(User).values(**values)
         result = await self._session.execute(stmt)
         return DbUser.model_validate(result.fetchone()[0])
