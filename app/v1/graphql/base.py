@@ -87,7 +87,9 @@ class Mutation:
         verificator = info.context.verificator
         field: str = getattr(auth_data, verification_source.value)
         await verificator.verify_code(field, code)
-        tokens = await users_set.authenticate(auth_data)
+        tokens = await users_set.authenticate(
+            auth_data, field_confirmed=verification_source.value
+        )
         return tokens
 
     @strawberry.mutation

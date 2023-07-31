@@ -1,3 +1,5 @@
+from typing import Literal
+
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
@@ -93,11 +95,16 @@ class UsersSet:
         if password1 != password2:
             raise PasswordsNotMatch('Passwords do not match')
 
-    async def authenticate(self, auth_data: AuthData) -> Tokens:
+    async def authenticate(
+            self,
+            auth_data: AuthData,
+            field_confirmed: Literal['email', 'phone'] | None = None
+    ) -> Tokens:
         self._validate_passwords(auth_data.password, auth_data.password_repeat)
         password_hash = pwd_context.hash(auth_data.password)
-        db_user = await self._users_queries.create(auth_data,
-                                                   password=password_hash)
+        db_user = await self._users_queries.create(
+            auth_data, password=password_hash, field_confirmed=field_confirmed
+        )
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
         await self._sessions_set.create(db_user.id, refresh_token)

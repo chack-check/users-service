@@ -1,3 +1,4 @@
+from typing import Literal
 from dataclasses import asdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,9 +53,15 @@ class UsersQueries:
         return await self._get_user_by_stmt(stmt)
 
     @handle_unique_violation
-    async def create(self, user_data: AuthData, password: str) -> DbUser:
+    async def create(
+            self, user_data: AuthData, password: str,
+            field_confirmed: Literal['email', 'phone'] | None = None
+    ) -> DbUser:
         values = asdict(user_data)
         values['password'] = password
+        if field_confirmed:
+            values[f"{field_confirmed}_confirmed"] = True
+
         del values['password_repeat']
         stmt = insert(User).returning(User).values(**values)
         result = await self._session.execute(stmt)
