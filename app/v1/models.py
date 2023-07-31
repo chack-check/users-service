@@ -2,7 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import mapped_column, Mapped
-from sqlalchemy.types import DateTime, TIMESTAMP
+from sqlalchemy.types import TIMESTAMP
 
 from app.project.db import Base
 from .schemas import UserActivities
