@@ -113,9 +113,6 @@ class UsersSet:
     async def update(self, update_data: UpdateData) -> User:
         ...
 
-    async def logout(self, user_id: int):
-        ...
-
     async def refresh(self, user: DbUser, refresh_token: str) -> Tokens:
         has_session = await self._sessions_set.has_user_session(
             user.id, refresh_token

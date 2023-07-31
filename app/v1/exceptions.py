@@ -62,7 +62,8 @@ class AuthRequired(Exception):
 class IncorrectVerificationSource(Exception):
 
     def __init__(self,
-                 message: str = 'You need to specify email or phone'):
+                 message: str = ('You need to specify only email'
+                                 ' or only phone')):
         super().__init__(message)
 
 
