@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from datetime import datetime
 
 from app.v1.schemas import DbUser, UserActivities
@@ -92,7 +93,7 @@ TOKEN_USER = DbUser(
     password='some_password_hash',
     id=1,
     activity=UserActivities.online,
-    last_seen=datetime.utcnow()
+    last_seen=datetime.utcnow().astimezone(ZoneInfo('UTC'))
 )
 
 
@@ -105,7 +106,7 @@ TOKEN_USER = DbUser(
     password='some_password_hash',
     id=1,
     activity=UserActivities.online,
-    last_seen=datetime.utcnow()
+    last_seen=datetime.utcnow().astimezone(ZoneInfo('UTC'))
 )
 
 
