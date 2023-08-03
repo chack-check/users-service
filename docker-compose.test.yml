@@ -12,6 +12,15 @@ services:
     ports:
       - 1025:1025
       - 8025:8025
+  migrations:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    command: alembic upgrade head
+    env_file:
+      - .env.test
+    depends_on:
+      - db
   app:
     build:
       context: .
@@ -20,5 +29,6 @@ services:
       - .env.test
     depends_on:
       - db
+      - migrations
       - redis
       - mailhog
