@@ -14,6 +14,18 @@ services:
     ports:
       - 1025:1025
       - 8025:8025
+  migrations:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    volumes:
+      - ./app:/src/app
+      - ./alembic:/src/alembic
+    command: poetry run alembic upgrade head
+    env_file:
+      - .env.dev
+    depends_on:
+      - db
   app:
     build:
       context: .
@@ -21,6 +33,7 @@ services:
     volumes:
       - ./app:/src/app
       - ./templates:/src/templates
+      - ./alembic:/src/alembic
     command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     env_file:
       - .env.dev

@@ -8,7 +8,6 @@ from strawberry.fastapi import GraphQLRouter
 from app.v1.dependencies import get_context
 from app.v1.graphql.base import Query, Mutation
 from app.v1.grpc import start_server
-from app.project.db import init_db
 from app.project.settings import settings
 
 
@@ -37,4 +36,3 @@ app.include_router(graphql_app_v1, prefix='/api/v1/users')
 async def on_startup():
     loop = asyncio.get_running_loop()
     asyncio.run_coroutine_threadsafe(start_server(), loop)
-    await init_db()
