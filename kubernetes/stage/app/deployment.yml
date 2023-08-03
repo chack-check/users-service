@@ -42,6 +42,9 @@ spec:
                   name: users-service-credentials
                   key: redis_url
 
+            - name: USERS_SERVICE_RUN_MDOE
+              value: "stage"
+
             - name: USERS_SERVICE_ALLOW_ORIGINS
               value: "[\"stage.chack-check.ru\"]"
 

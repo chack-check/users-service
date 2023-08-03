@@ -14,7 +14,11 @@ from app.project.settings import settings
 
 schema_v1 = strawberry.Schema(Query, Mutation)
 
-graphql_app_v1 = GraphQLRouter(schema_v1, context_getter=get_context)
+graphql_app_v1 = GraphQLRouter(
+    schema_v1,
+    context_getter=get_context,
+    graphiql=False if settings.run_mode == 'prod' else True,
+)
 
 app = FastAPI(redoc_url=None, docs_url=None, openapi_url=None)
 
@@ -31,8 +35,6 @@ app.include_router(graphql_app_v1, prefix='/api/v1/users')
 
 @app.on_event('startup')
 async def on_startup():
-    # thread = threading.Thread(target=execute_protobuf_server)
-    # thread.start()
     loop = asyncio.get_running_loop()
     asyncio.run_coroutine_threadsafe(start_server(), loop)
     await init_db()

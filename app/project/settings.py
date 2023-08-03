@@ -1,6 +1,7 @@
-from fastapi.templating import Jinja2Templates
+from typing import Literal
 from pathlib import Path
 
+from fastapi.templating import Jinja2Templates
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,7 @@ class Settings(BaseSettings):
     database_url: str
     redis_url: str
     secret_key: str
+    run_mode: Literal['dev', 'stage', 'prod'] = 'dev'
     allow_origins: list[str] = ['*']
     smtp_host: str
     smtp_port: str
