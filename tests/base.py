@@ -1,11 +1,15 @@
 from zoneinfo import ZoneInfo
 from datetime import datetime
 
-from app.v1.schemas import DbUser, UserActivities
-from app.v1.graphql.graph_types import AuthData, LoginData
+from app.v1.schemas import (
+    DbUser,
+    UserActivities,
+    UserAuthData,
+    UserLoginData,
+)
 
 
-AUTH_USER_DATA = AuthData(
+AUTH_USER_DATA = UserAuthData(
     email='test@mail.com',
     username='test',
     phone='88005553535',
@@ -16,7 +20,7 @@ AUTH_USER_DATA = AuthData(
 )
 
 
-AUTH_USER_DATA_EXISTS_EMAIL = AuthData(
+AUTH_USER_DATA_EXISTS_EMAIL = UserAuthData(
     email='test@mail.com',
     username='test2',
     phone='89089089089',
@@ -27,7 +31,7 @@ AUTH_USER_DATA_EXISTS_EMAIL = AuthData(
 )
 
 
-AUTH_USER_DATA_EXISTS_USERNAME = AuthData(
+AUTH_USER_DATA_EXISTS_USERNAME = UserAuthData(
     email='test2@mail.com',
     username='test',
     phone='89089089089',
@@ -38,7 +42,7 @@ AUTH_USER_DATA_EXISTS_USERNAME = AuthData(
 )
 
 
-AUTH_USER_DATA_EXISTS_PHONE = AuthData(
+AUTH_USER_DATA_EXISTS_PHONE = UserAuthData(
     email='test2@mail.com',
     username='test2',
     phone='88005553535',
@@ -49,7 +53,7 @@ AUTH_USER_DATA_EXISTS_PHONE = AuthData(
 )
 
 
-AUTH_USER_DATA_INVALID_PASSWORDS = AuthData(
+AUTH_USER_DATA_INVALID_PASSWORDS = UserAuthData(
     email='test@mail.com',
     username='test',
     phone='88005553535',
@@ -60,25 +64,25 @@ AUTH_USER_DATA_INVALID_PASSWORDS = AuthData(
 )
 
 
-LOGIN_USER_DATA_USERNAME = LoginData(
+LOGIN_USER_DATA_USERNAME = UserLoginData(
     phone_or_username='test',
     password='Password123$'
 )
 
 
-LOGIN_USER_DATA_PHONE = LoginData(
+LOGIN_USER_DATA_PHONE = UserLoginData(
     phone_or_username='88005553535',
     password='Password123$'
 )
 
 
-LOGIN_USER_DATA_INCORRECT_USERNAME = LoginData(
+LOGIN_USER_DATA_INCORRECT_USERNAME = UserLoginData(
     phone_or_username='incorrect',
     password='Password123$'
 )
 
 
-LOGIN_USER_DATA_INCORRECT_PASSWORD = LoginData(
+LOGIN_USER_DATA_INCORRECT_PASSWORD = UserLoginData(
     phone_or_username='test',
     password='incorrect password'
 )

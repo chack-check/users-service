@@ -1,7 +1,7 @@
 import math
-from typing import TypeVar, Generic, NamedTuple, Type
+from typing import TypeVar, Generic, NamedTuple, Type, Any
 import re
-from dataclasses import fields
+from dataclasses import fields, asdict
 
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,9 +34,21 @@ def validate_user_required(user: DbUser | None) -> None:
         raise AuthRequired()
 
 
-def get_schema_from_pydantic(schema, model: BaseModel):
+def get_schema_from_pydantic(schema, model: K):
     include_fields = {field.name for field in fields(schema)}
     return schema(**model.model_dump(include=include_fields))
+
+
+def get_pydantic_from_schema(schema, model: Type[K]) -> K:
+    return model.model_validate(asdict(schema))
+
+
+def to_dict(schema, *, exclude_none: bool = True) -> dict[str, Any]:
+    data = asdict(schema)
+    if exclude_none:
+        return {key: value for key, value in data.items() if value is not None}
+
+    return data
 
 
 def handle_unique_violation(func):

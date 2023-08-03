@@ -61,8 +61,8 @@ class AuthData:
 
 @strawberry.input
 class UpdateData:
-    first_name: str
-    last_name: str
+    first_name: str | None = None
+    last_name: str | None = None
     middle_name: str | None = None
     status: str | None = None
 

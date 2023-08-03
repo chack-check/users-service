@@ -1,5 +1,4 @@
 import math
-from dataclasses import asdict
 
 import pytest
 from sqlalchemy import select, insert
@@ -72,7 +71,7 @@ async def test_authenticate_already_exists_phone(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_login_user_with_username(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).values(**auth_dict)
@@ -87,7 +86,7 @@ async def test_login_user_with_username(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_login_user_with_phone(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).values(**auth_dict)
@@ -102,7 +101,7 @@ async def test_login_user_with_phone(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_login_user_incorrect_username_or_phone(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).values(**auth_dict)
@@ -115,7 +114,7 @@ async def test_login_user_incorrect_username_or_phone(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_login_user_incorrect_password(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).values(**auth_dict)
@@ -128,7 +127,7 @@ async def test_login_user_incorrect_password(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_get_by_username(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).values(**auth_dict)
@@ -141,7 +140,7 @@ async def test_get_by_username(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_get_by_id(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).returning(User.id).values(**auth_dict)
@@ -155,7 +154,7 @@ async def test_get_by_id(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_get_by_email(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).values(**auth_dict)
@@ -168,7 +167,7 @@ async def test_get_by_email(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_get_by_phone(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).values(**auth_dict)
@@ -193,7 +192,7 @@ async def test_get_with_noone_field(users_set: UsersSet):
 @pytest.mark.asyncio
 async def test_get_from_token(users_set: UsersSet):
     password_hash = pwd_context.hash(AUTH_USER_DATA.password)
-    auth_dict = asdict(AUTH_USER_DATA)
+    auth_dict = AUTH_USER_DATA.model_dump()
     auth_dict['password'] = password_hash
     del auth_dict['password_repeat']
     stmt = insert(User).returning(User.id).values(**auth_dict)

@@ -1,11 +1,20 @@
 from typing import Literal, Any
-from dataclasses import asdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import insert, select, or_, Select, func
+from sqlalchemy import (
+    insert,
+    select,
+    or_,
+    Select,
+    func,
+    update,
+)
 
-from .graphql.graph_types import AuthData
-from .schemas import DbUser
+from .schemas import (
+    DbUser,
+    UserUpdateData,
+    UserAuthData,
+)
 from .models import User
 from .exceptions import UserDoesNotExist
 from .utils import (
@@ -55,11 +64,11 @@ class UsersQueries:
 
     def _get_creation_data(
             self,
-            user_data: AuthData,
+            user_data: UserAuthData,
             password: str,
             field_confirmed: Literal['email', 'phone'] | None = None
     ) -> dict[str, Any]:
-        values = asdict(user_data)
+        values = user_data.model_dump()
         values['password'] = password
         if field_confirmed:
             values[f"{field_confirmed}_confirmed"] = True
@@ -69,7 +78,7 @@ class UsersQueries:
 
     @handle_unique_violation
     async def create(
-            self, user_data: AuthData, password: str,
+            self, user_data: UserAuthData, password: str,
             field_confirmed: Literal['email', 'phone'] | None = None
     ) -> DbUser:
         values = self._get_creation_data(
@@ -111,3 +120,26 @@ class UsersQueries:
         paginator = Paginator(self._session, DbUser,
                               count_stmt, data_stmt)
         return await paginator.page(page, per_page)
+
+    async def update(self, user: DbUser,
+                     update_data: UserUpdateData) -> DbUser:
+        clear_data = update_data.model_dump(exclude_none=True)
+        if not clear_data:
+            return user
+
+        stmt = update(User).returning(User).values(
+            **clear_data
+        ).where(User.id == user.id)
+        return await self._get_user_by_stmt(stmt)
+
+    async def confirm_email(self, user: DbUser):
+        stmt = update(User).values(
+            email_confirmed=True
+        ).where(User.id == user.id)
+        await self._session.execute(stmt)
+
+    async def confirm_phone(self, user: DbUser):
+        stmt = update(User).values(
+            phone_confirmed=True
+        ).where(User.id == user.id)
+        await self._session.execute(stmt)

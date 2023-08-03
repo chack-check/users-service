@@ -4,10 +4,6 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
-from ..graphql.graph_types import (
-    User, PaginatedUsersResponse, LoginData,
-    Tokens, AuthData, UpdateData
-)
 from ..crud import UsersQueries
 from ..exceptions import (
     PasswordsNotMatch,
@@ -15,8 +11,16 @@ from ..exceptions import (
     IncorrectToken,
     UserDoesNotExist,
 )
-from ..schemas import DbUser
-from ..utils import get_schema_from_pydantic
+from ..schemas import (
+    DbUser,
+    UserUpdateData,
+    UserAuthData,
+    UserLoginData,
+    UserCredentials,
+)
+from ..utils import (
+    PaginatedData,
+)
 from .tokens import TokensSet
 from .sessions import SessionSet
 
@@ -35,7 +39,7 @@ class UsersSet:
     async def get(self, *, id: int | None = None,
                   username: str | None = None,
                   email: str | None = None,
-                  phone: str | None = None) -> User:
+                  phone: str | None = None) -> DbUser:
         assert any((id, username, email, phone)), "Specify get field"
         assert len(list(filter(bool, (id, username, email, phone)))) == 1, (
             "You can specify only one get field"
@@ -49,7 +53,7 @@ class UsersSet:
         else:
             user = await self._users_queries.get_by_phone(phone)
 
-        return get_schema_from_pydantic(User, user)
+        return user
 
     async def get_from_token(self, token: str, *,
                              raise_exception: bool = True) -> DbUser | None:
@@ -63,25 +67,17 @@ class UsersSet:
             return None
 
     async def search(self, *, query: str, page: int = 1,
-                     per_page: int = 20) -> PaginatedUsersResponse:
+                     per_page: int = 20) -> PaginatedData[DbUser]:
         paginated_users = await self._users_queries.search(
             query, page, per_page
         )
-        users_schemas = [
-            get_schema_from_pydantic(User, u) for u in paginated_users.data
-        ]
-        return PaginatedUsersResponse(
-            page=paginated_users.page,
-            num_pages=paginated_users.num_pages,
-            per_page=paginated_users.per_page,
-            data=users_schemas
-        )
+        return paginated_users
 
     def _verify_password(self, password: str, hash_: str) -> None:
         if not pwd_context.verify(password, hash_):
             raise IncorrectPassword
 
-    async def login(self, login_data: LoginData) -> Tokens:
+    async def login(self, login_data: UserLoginData) -> UserCredentials:
         db_user = await self._users_queries.get_by_phone_or_username(
             login_data.phone_or_username
         )
@@ -89,7 +85,11 @@ class UsersSet:
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
         await self._sessions_set.create(db_user.id, refresh_token)
-        return Tokens(access_token=access_token, refresh_token=refresh_token)
+        return UserCredentials(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=db_user,
+        )
 
     def _validate_passwords(self, password1: str, password2: str):
         if password1 != password2:
@@ -97,23 +97,41 @@ class UsersSet:
 
     async def authenticate(
             self,
-            auth_data: AuthData,
-            field_confirmed: Literal['email', 'phone'] | None = None
-    ) -> Tokens:
+            auth_data: UserAuthData,
+    ) -> UserCredentials:
         self._validate_passwords(auth_data.password, auth_data.password_repeat)
         password_hash = pwd_context.hash(auth_data.password)
         db_user = await self._users_queries.create(
-            auth_data, password=password_hash, field_confirmed=field_confirmed
+            auth_data, password=password_hash
         )
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
         await self._sessions_set.create(db_user.id, refresh_token)
-        return Tokens(access_token=access_token, refresh_token=refresh_token)
+        return UserCredentials(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=db_user,
+        )
 
-    async def update(self, update_data: UpdateData) -> User:
-        ...
+    async def confirm_field(self, user: DbUser,
+                            field: Literal['email', 'phone']):
+        field_confirmed = getattr(user, f"{field}_confirmed")
+        if field_confirmed:
+            return
 
-    async def refresh(self, user: DbUser, refresh_token: str) -> Tokens:
+        method = {
+            'email': self._users_queries.confirm_email,
+            'phone': self._users_queries.confirm_phone,
+        }[field]
+        await method(user)
+
+    async def update(self, user: DbUser,
+                     update_data: UserUpdateData) -> DbUser:
+        db_user = await self._users_queries.update(user, update_data)
+        return db_user
+
+    async def refresh(self, user: DbUser,
+                      refresh_token: str) -> UserCredentials:
         has_session = await self._sessions_set.has_user_session(
             user.id, refresh_token
         )
@@ -121,9 +139,10 @@ class UsersSet:
             raise IncorrectToken
 
         new_access_token = self._tokens_set.create_token(user, mode='access')
-        return Tokens(
+        return UserCredentials(
             access_token=new_access_token,
             refresh_token=refresh_token,
+            user=user,
         )
 
     async def logout_all(self, user_id: int):

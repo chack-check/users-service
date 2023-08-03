@@ -15,6 +15,12 @@ class UserActivities(str, Enum):
     away = 'away'
 
 
+class UserCredentials(BaseModel):
+    access_token: str
+    refresh_token: str
+    user: "DbUser"
+
+
 class BaseUser(BaseModel):
     email: EmailStr
     username: str
@@ -34,3 +40,22 @@ class DbUser(BaseUser):
     phone_confirmed: bool = False
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserUpdateData(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    middle_name: str | None = None
+    status: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserLoginData(BaseModel):
+    phone_or_username: str
+    password: str
+
+
+class UserAuthData(BaseUser):
+    password: str
+    password_repeat: str
