@@ -59,7 +59,7 @@ spec:
               value: info@chack-check.ru
         - name: chack-users-service-migrations
           image: artemowkin/chack-users-service:latest
-          command: ["alembic", "upgrade", "head"]
+          command: ["sh", "-c", "alembic upgrade head"]
           env:
             - name: USERS_SERVICE_DATABASE_URL
               valueFrom:
