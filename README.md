@@ -2,7 +2,7 @@
 
 Сервис, управляющий пользователями и аутентификацией
 
-- [Стейдж окружение](https://stage.chack-check.ru/api/v1/users) - там же есть документация GraphiQL
+- https://stage.chack-check.ru/api/v1/users - стейдж окружение, там же есть документация GraphiQL
 
 ## Предустановка
 
