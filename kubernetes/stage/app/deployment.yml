@@ -23,7 +23,7 @@ spec:
               name: web
             - containerPort: 9090
               name: grpc
-          command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+          command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
           env:
             - name: USERS_SERVICE_DATABASE_URL
               valueFrom:
@@ -59,7 +59,7 @@ spec:
               value: info@chack-check.ru
         - name: chack-users-service-migrations
           image: artemowkin/chack-users-service:latest
-          command: alembic upgrade head
+          command: ["alembic", "upgrade", "head"]
           env:
             - name: USERS_SERVICE_DATABASE_URL
               valueFrom:
