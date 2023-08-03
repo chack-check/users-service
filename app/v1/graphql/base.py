@@ -136,7 +136,7 @@ class Mutation:
             info: CustomInfo, code: str,
             verification_source: VerificationSources
     ) -> None:
-        validate_user_required()
+        validate_user_required(info.context.user)
         verificator = info.context.verificator
         users_set = info.context.users_set
         user = info.context.user
