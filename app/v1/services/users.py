@@ -50,8 +50,10 @@ class UsersSet:
             user = await self._users_queries.get_by_username(username)
         elif email:
             user = await self._users_queries.get_by_email(email)
-        else:
+        elif phone:
             user = await self._users_queries.get_by_phone(phone)
+        else:
+            raise ValueError("You need to specify one field value: id|username|email|phone")
 
         return user
 
@@ -66,12 +68,30 @@ class UsersSet:
 
             return None
 
+    async def get_from_refresh_token(self, token: str, *,
+                                     raise_exception: bool = True) -> DbUser | None:
+        try:
+            user_id = self._tokens_set.decode_token(token)
+            has_session = await self._sessions_set.has_user_session(user_id, token)
+            if not has_session:
+                raise UserDoesNotExist
+
+            return await self._users_queries.get_by_id(user_id)
+        except UserDoesNotExist:
+            if raise_exception:
+                raise
+
+            return None
+
     async def search(self, *, query: str, page: int = 1,
                      per_page: int = 20) -> PaginatedData[DbUser]:
         paginated_users = await self._users_queries.search(
             query, page, per_page
         )
         return paginated_users
+
+    async def get_by_ids(self, ids: list[int]) -> list[DbUser]:
+        return await self._users_queries.get_by_ids(ids)
 
     def _verify_password(self, password: str, hash_: str) -> None:
         if not pwd_context.verify(password, hash_):

@@ -38,4 +38,5 @@ service Users {
     rpc GetUserByUsername(GetUserByUsernameRequest) returns (UserResponse) {}
     rpc GetUserByEmail(GetUserByEmailRequest) returns (UserResponse) {}
     rpc GetUserByToken(GetUserByTokenRequest) returns (UserResponse) {}
+    rpc GetUserByRefreshToken(GetUserByTokenRequest) returns (UserResponse) {}
 }

@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import app.protobuf.users_pb2 as users__pb2
+from . import users_pb2 as users__pb2
 
 
 class UsersStub(object):
@@ -31,6 +31,11 @@ class UsersStub(object):
                 )
         self.GetUserByToken = channel.unary_unary(
                 '/protousers.Users/GetUserByToken',
+                request_serializer=users__pb2.GetUserByTokenRequest.SerializeToString,
+                response_deserializer=users__pb2.UserResponse.FromString,
+                )
+        self.GetUserByRefreshToken = channel.unary_unary(
+                '/protousers.Users/GetUserByRefreshToken',
                 request_serializer=users__pb2.GetUserByTokenRequest.SerializeToString,
                 response_deserializer=users__pb2.UserResponse.FromString,
                 )
@@ -63,6 +68,12 @@ class UsersServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetUserByRefreshToken(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_UsersServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -83,6 +94,11 @@ def add_UsersServicer_to_server(servicer, server):
             ),
             'GetUserByToken': grpc.unary_unary_rpc_method_handler(
                     servicer.GetUserByToken,
+                    request_deserializer=users__pb2.GetUserByTokenRequest.FromString,
+                    response_serializer=users__pb2.UserResponse.SerializeToString,
+            ),
+            'GetUserByRefreshToken': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUserByRefreshToken,
                     request_deserializer=users__pb2.GetUserByTokenRequest.FromString,
                     response_serializer=users__pb2.UserResponse.SerializeToString,
             ),
@@ -159,6 +175,23 @@ class Users(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/protousers.Users/GetUserByToken',
+            users__pb2.GetUserByTokenRequest.SerializeToString,
+            users__pb2.UserResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetUserByRefreshToken(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/protousers.Users/GetUserByRefreshToken',
             users__pb2.GetUserByTokenRequest.SerializeToString,
             users__pb2.UserResponse.FromString,
             options, channel_credentials,

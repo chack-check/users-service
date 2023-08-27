@@ -58,6 +58,12 @@ class UsersQueries:
         stmt = select(User).where(User.email == email)
         return await self._get_user_by_stmt(stmt)
 
+    async def get_by_ids(self, ids: list[int]) -> list[DbUser]:
+        stmt = select(User).where(User.id.in_(ids))
+        result = await self._session.execute(stmt)
+        db_users = result.fetchall()
+        return [DbUser.model_validate(user[0]) for user in db_users]
+
     async def get_by_phone(self, phone: str) -> DbUser:
         stmt = select(User).where(User.phone == phone)
         return await self._get_user_by_stmt(stmt)
