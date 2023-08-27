@@ -56,7 +56,9 @@ class Users(users_pb2_grpc.UsersServicer):
     async def GetUserByToken(self, request, context):
         async with session() as s:
             users_set = UsersSet(s, redis_db)
-            db_user = await users_set.get_from_token(request.token, raise_exception=True)
+            db_user = await users_set.get_from_token(
+                request.token, raise_exception=True
+            )
             assert db_user
             return get_user_from_pydantic(db_user)
 
@@ -64,7 +66,9 @@ class Users(users_pb2_grpc.UsersServicer):
     async def GetUserByRefreshToken(self, request, context):
         async with session() as s:
             users_set = UsersSet(s, redis_db)
-            db_user = await users_set.get_from_refresh_token(request.token, raise_exception=True)
+            db_user = await users_set.get_from_refresh_token(
+                request.token, raise_exception=True
+            )
             assert db_user
             return get_user_from_pydantic(db_user)
 

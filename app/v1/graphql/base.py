@@ -70,7 +70,8 @@ class Query:
         )
 
     @strawberry.field
-    async def users_by_ids(self, info: CustomInfo, ids: list[int]) -> list[User]:
+    async def users_by_ids(self, info: CustomInfo,
+                           ids: list[int]) -> list[User]:
         validate_user_required(info.context.user)
         users = await info.context.users_set.get_by_ids(ids)
         users_list = [get_schema_from_pydantic(User, u) for u in users]

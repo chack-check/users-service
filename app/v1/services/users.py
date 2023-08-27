@@ -53,7 +53,8 @@ class UsersSet:
         elif phone:
             user = await self._users_queries.get_by_phone(phone)
         else:
-            raise ValueError("You need to specify one field value: id|username|email|phone")
+            raise ValueError("You need to specify one field"
+                             " value: id|username|email|phone")
 
         return user
 
@@ -68,11 +69,15 @@ class UsersSet:
 
             return None
 
-    async def get_from_refresh_token(self, token: str, *,
-                                     raise_exception: bool = True) -> DbUser | None:
+    async def get_from_refresh_token(
+            self, token: str, *,
+            raise_exception: bool = True
+    ) -> DbUser | None:
         try:
             user_id = self._tokens_set.decode_token(token)
-            has_session = await self._sessions_set.has_user_session(user_id, token)
+            has_session = await self._sessions_set.has_user_session(
+                user_id, token
+            )
             if not has_session:
                 raise UserDoesNotExist
 
