@@ -8,6 +8,7 @@ from ..senders.email import EmailSender
 from ..senders.phone import PhoneSender
 from ..dependencies import CustomContext
 from ..utils import (
+    validate_auth_data,
     validate_user_required,
     get_schema_from_pydantic,
     get_pydantic_from_schema,
@@ -117,6 +118,7 @@ class Mutation:
                            code: str,
                            verification_source: VerificationSources,
                            auth_data: AuthData) -> Tokens:
+        validate_auth_data(auth_data)
         users_set = info.context.users_set
         data = get_pydantic_from_schema(auth_data, UserAuthData)
         verificator = info.context.verificator

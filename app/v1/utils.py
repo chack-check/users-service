@@ -8,11 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import Select
 
+from app.v1.graphql.graph_types import AuthData
+
 from .exceptions import (
     AuthRequired,
     UserWithThisEmailAlreadyExists,
     UserWithThisPhoneAlreadyExists,
     UserWithThisUsernameAlreadyExists,
+    AuthenticationEmailOrPhoneRequired,
 )
 from .schemas import DbUser
 
@@ -27,6 +30,11 @@ class PaginatedData(NamedTuple, Generic[K]):
     num_pages: int
     per_page: int
     data: list[K]
+
+
+def validate_auth_data(data: AuthData) -> None:
+    if not data.email and not data.phone:
+        raise AuthenticationEmailOrPhoneRequired
 
 
 def validate_user_required(user: DbUser | None) -> None:

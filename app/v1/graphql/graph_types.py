@@ -49,14 +49,14 @@ class VerificationSended:
 
 @strawberry.input
 class AuthData:
-    email: EmailStr
     username: str
-    phone: str
     first_name: str
     last_name: str
-    middle_name: str | None = None
     password: str
     password_repeat: str
+    middle_name: str | None = None
+    phone: str | None = None
+    email: EmailStr | None = None
 
 
 @strawberry.input

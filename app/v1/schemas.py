@@ -22,9 +22,9 @@ class UserCredentials(BaseModel):
 
 
 class BaseUser(BaseModel):
-    email: EmailStr
+    email: EmailStr | None = None
     username: str
-    phone: str
+    phone: str | None = None
     first_name: str
     last_name: str
     middle_name: str | None = None

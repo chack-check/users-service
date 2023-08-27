@@ -87,3 +87,11 @@ class IncorrectSignature(Exception):
     def __init__(self,
                  message: str = ('Incorrect signature')):
         super().__init__(message)
+
+
+class AuthenticationEmailOrPhoneRequired(Exception):
+
+    def __init__(self,
+                 message: str = ('You need to specify'
+                                 ' email or phone')):
+        super().__init__(message)
