@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     smtp_host: str
     smtp_port: str
     smtp_from: str
+    sentry_link: str | None = None
     smtp_user: str | None = None
     smtp_password: str | None = None
     smtp_use_tls: bool = False

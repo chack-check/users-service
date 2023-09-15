@@ -1,5 +1,6 @@
 import asyncio
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import strawberry
@@ -10,6 +11,9 @@ from app.v1.graphql.base import Query, Mutation
 from app.v1.grpc import start_server
 from app.project.settings import settings
 
+
+if settings.sentry_link:
+    sentry_sdk.init(settings.sentry_link)
 
 schema_v1 = strawberry.Schema(Query, Mutation)
 

@@ -24,6 +24,7 @@ betterproto = "^1.2.5"
 grpcio = "^1.56.2"
 protobuf = "^4.23.4"
 alembic = "^1.11.1"
+sentry-sdk = "^1.31.0"
 
 
 [tool.poetry.group.test.dependencies]
