@@ -29,7 +29,8 @@ class TokensSet:
                      mode: Literal['refresh', 'access']) -> str:
         exp_delta = self._get_exp_delta(mode)
         exp = datetime.datetime.utcnow() + exp_delta
-        encode_data = {'user_id': user.id, 'exp': exp}
+        token_sub = {'user_id': user.id, 'username': user.username}
+        encode_data = {'sub': token_sub, 'exp': exp}
         return jwt.encode(encode_data, settings.secret_key, ALGORITHM)
 
     def decode_token(self, token: str) -> int:

@@ -12,7 +12,7 @@ def _generate_email_message(from_: str, to: list[str],
     msg = MIMEMultipart()
     msg['Subject'] = subject
     msg['From'] = from_
-    msg['To'] = to
+    msg['To'] = ', '.join(to)
     html = MIMEText(message, 'html')
     msg.attach(html)
     return msg
@@ -22,17 +22,17 @@ def _get_smtp_server(is_tls: bool = False) -> smtplib.SMTP:
     if is_tls:
         context = ssl.create_default_context()
         return smtplib.SMTP_SSL(
-            settings.smtp_host, settings.smtp_port, context=context
+            settings.smtp_host, int(settings.smtp_port), context=context
         )
 
-    return smtplib.SMTP(settings.smtp_host, settings.smtp_port)
+    return smtplib.SMTP(settings.smtp_host, int(settings.smtp_port))
 
 
 def send_email(from_: str, to: list[str],
                subject: str, message: str) -> None:
     server = _get_smtp_server(settings.smtp_use_tls)
     with server as s:
-        if settings.smtp_password:
+        if settings.smtp_password and settings.smtp_user:
             s.login(settings.smtp_user, settings.smtp_password)
 
         msg = _generate_email_message(from_, to, subject, message)
