@@ -1,4 +1,5 @@
 import datetime
+import json
 import pytest
 from jose import jwt
 
@@ -15,10 +16,15 @@ async def test_create_access_token(tokens_set: TokensSet):
     created_token = tokens_set.create_token(TOKEN_USER, mode='access')
     token_data = jwt.decode(created_token, settings.secret_key, algorithms=[ALGORITHM])
 
-    assert 'user_id' in token_data
+    assert 'sub' in token_data
+    assert isinstance(token_data['sub'], str)
     assert 'exp' in token_data
 
-    assert token_data['user_id'] == TOKEN_USER.id
+    token_sub = json.loads(token_data['sub'])
+    assert 'user_id' in token_sub
+    assert 'username' in token_sub
+
+    assert token_sub['user_id'] == TOKEN_USER.id
     assert token_data['exp'] == int((datetime.datetime.utcnow() + ACCESS_TOKEN_EXP_DELTA).timestamp())
 
 
@@ -27,20 +33,25 @@ async def test_create_refresh_token(tokens_set: TokensSet):
     created_token = tokens_set.create_token(TOKEN_USER, mode='refresh')
     token_data = jwt.decode(created_token, settings.secret_key, algorithms=[ALGORITHM])
 
-    assert 'user_id' in token_data
+    assert 'sub' in token_data
+    assert isinstance(token_data['sub'], str)
     assert 'exp' in token_data
 
-    assert token_data['user_id'] == TOKEN_USER.id
+    token_sub = json.loads(token_data['sub'])
+    assert 'user_id' in token_sub
+    assert 'username' in token_sub
+
+    assert token_sub['user_id'] == TOKEN_USER.id
     assert token_data['exp'] == int((datetime.datetime.utcnow() + REFRESH_TOKEN_EXP_DELTA).timestamp())
 
 
 @pytest.mark.asyncio
 async def test_decode_token(tokens_set: TokensSet):
-    data = {'user_id': 1, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}
+    data = {'sub': '{"user_id": 1, "username": "ivan"}', 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}
     token = jwt.encode(data, settings.secret_key, ALGORITHM)
     decoded_token_user_id = tokens_set.decode_token(token)
 
-    assert decoded_token_user_id == data['user_id']
+    assert decoded_token_user_id == 1
 
 
 @pytest.mark.asyncio
