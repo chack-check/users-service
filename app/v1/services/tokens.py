@@ -1,3 +1,4 @@
+import json
 from typing import Literal
 import datetime
 
@@ -30,7 +31,8 @@ class TokensSet:
         exp_delta = self._get_exp_delta(mode)
         exp = datetime.datetime.utcnow() + exp_delta
         token_sub = {'user_id': user.id, 'username': user.username}
-        encode_data = {'sub': token_sub, 'exp': exp}
+        token_sub_json = json.dumps(token_sub)
+        encode_data = {'sub': token_sub_json, 'exp': exp}
         return jwt.encode(encode_data, settings.secret_key, ALGORITHM)
 
     def decode_token(self, token: str) -> int:
@@ -38,6 +40,8 @@ class TokensSet:
             payload = jwt.decode(token, settings.secret_key,
                                  algorithms=[ALGORITHM])
             assert payload['exp'] > datetime.datetime.utcnow().timestamp()
-            return payload['user_id']
+            decoded_sub = json.loads(payload['sub'])
+            assert 'user_id' in decoded_sub
+            return decoded_sub['user_id']
         except (AssertionError, KeyError, JWTError):
             raise IncorrectToken
