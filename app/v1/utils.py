@@ -65,7 +65,11 @@ def handle_unique_violation(func):
         try:
             return await func(*args, **kwargs)
         except IntegrityError as e:
-            field_name = re.search(r"\((.*)\)=\(.*\)", e.args[0]).group(1)
+            searched = re.search(r"\((.*)\)=\(.*\)", e.args[0])
+            if not searched:
+                raise e
+
+            field_name = searched.group(1)
             exception = {
                 'username': UserWithThisUsernameAlreadyExists,
                 'phone': UserWithThisPhoneAlreadyExists,

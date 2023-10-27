@@ -4,6 +4,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
+from app.project.settings import settings
 from ..crud import UsersQueries
 from ..exceptions import (
     PasswordsNotMatch,
@@ -21,6 +22,8 @@ from ..schemas import (
 from ..utils import (
     PaginatedData,
 )
+from ..files import FilesSender
+from ..avatars import generate_avatar
 from .tokens import TokensSet
 from .sessions import SessionSet
 
@@ -119,6 +122,19 @@ class UsersSet:
     def _validate_passwords(self, password1: str, password2: str):
         if password1 != password2:
             raise PasswordsNotMatch('Passwords do not match')
+
+    async def generate_avatar(self,
+                              access_token: str,
+                              db_user: DbUser) -> str | None:
+        headers = {"Authorization": f"Bearer {access_token}"}
+        files_sender = FilesSender(settings.files_service_url, headers)
+        metadata = f"{db_user.last_name} {db_user.first_name}"
+        title = f"{db_user.last_name[0]}{db_user.first_name[0]}"
+        avatar_svg = generate_avatar(metadata, title)
+        files_urls = await files_sender.post_file([avatar_svg])
+        print(files_urls)
+        avatar_url = files_urls[0].url if files_urls else None
+        await self.update(db_user, UserUpdateData(avatar_url=avatar_url))
 
     async def authenticate(
             self,

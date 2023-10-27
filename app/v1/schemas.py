@@ -24,6 +24,7 @@ class UserCredentials(BaseModel):
 class BaseUser(BaseModel):
     email: EmailStr | None = None
     username: str
+    avatar_url: str | None = None
     phone: str | None = None
     first_name: str
     last_name: str
@@ -47,6 +48,7 @@ class UserUpdateData(BaseModel):
     last_name: str | None = None
     middle_name: str | None = None
     status: str | None = None
+    avatar_url: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -59,3 +61,8 @@ class UserLoginData(BaseModel):
 class UserAuthData(BaseUser):
     password: str
     password_repeat: str
+
+
+class FileUrl(BaseModel):
+    filename: str
+    url: str

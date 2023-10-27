@@ -40,6 +40,7 @@ class User:
     email_confirmed: bool
     phone_confirmed: bool
     last_seen: datetime
+    avatar_url: str | None = None
 
 
 @strawberry.type
@@ -65,6 +66,7 @@ class UpdateData:
     last_name: str | None = None
     middle_name: str | None = None
     status: str | None = None
+    avatar_url: str | None = None
 
 
 @strawberry.input

@@ -13,6 +13,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True)
+    avatar_url: Mapped[str] = mapped_column(server_default="https://google.com")
     phone: Mapped[str] = mapped_column(unique=True, nullable=True)
     email: Mapped[str] = mapped_column(unique=True, nullable=True)
     password: Mapped[str] = mapped_column()

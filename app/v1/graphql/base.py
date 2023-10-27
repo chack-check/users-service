@@ -126,6 +126,8 @@ class Mutation:
         await verificator.verify_code(field, code)
         tokens = await users_set.authenticate(data)
         await users_set.confirm_field(tokens.user, verification_source.value)
+        assert info.context.background_tasks
+        await users_set.generate_avatar(tokens.access_token, tokens.user)
         return get_schema_from_pydantic(Tokens, tokens)
 
     @strawberry.mutation

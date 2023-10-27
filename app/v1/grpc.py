@@ -28,6 +28,7 @@ def get_user_from_pydantic(user: DbUser):
         email_confirmed=user.email_confirmed,
         phone_confirmed=user.phone_confirmed,
         last_seen=user.last_seen.isoformat(),
+        avatar_url=user.avatar_url,
     )
 
 

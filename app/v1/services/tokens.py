@@ -9,7 +9,7 @@ from ..exceptions import IncorrectToken
 from app.project.settings import settings
 
 
-ACCESS_TOKEN_EXP_DELTA = datetime.timedelta(minutes=30)
+ACCESS_TOKEN_EXP_DELTA = datetime.timedelta(days=1)
 
 REFRESH_TOKEN_EXP_DELTA = datetime.timedelta(days=30)
 

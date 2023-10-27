@@ -15,6 +15,7 @@ message UserResponse {
     bool email_confirmed = 10;
     bool phone_confirmed = 11;
     string last_seen = 12;
+    string avatar_url = 13;
 }
 
 message GetUserByIdRequest {
