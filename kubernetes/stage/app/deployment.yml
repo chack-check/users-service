@@ -63,3 +63,6 @@ spec:
 
             - name: USERS_SERVICE_SMTP_FROM
               value: info@chack-check.ru
+
+            - name: USERS_SERVICE_FILES_SERVICE_URL
+              value: files-service:8000
