@@ -1,4 +1,4 @@
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urljoin
 
 import aiohttp
 
@@ -24,13 +24,13 @@ class FilesSender:
             for file in files:
                 form_data.add_field('files', file, filename="avatar.svg")
 
-            async with session.post(self.publish_url, data=form_data) as response:
+            async with session.post(self.publish_url, data=form_data) as response:  # noqa: E501
                 if not response.ok:
                     print(await response.json())
                     return []
 
                 response_json = await response.json()
-                return [
-                    FileUrl(filename=file['filename'], url=self._construct_avatar_url(file['url'])) for file in response_json
-                ]
-
+                return [FileUrl(
+                    filename=file['filename'],
+                    url=self._construct_avatar_url(file['url'])
+                ) for file in response_json]
