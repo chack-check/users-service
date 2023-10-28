@@ -38,6 +38,12 @@ spec:
                   name: users-service-credentials
                   key: redis_url
 
+            - name: USERS_SERVICE_SENTRY_LINK
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: sentry_link
+
             - name: USERS_SERVICE_RUN_MDOE
               value: "stage"
 
@@ -52,3 +58,6 @@ spec:
 
             - name: USERS_SERVICE_SMTP_FROM
               value: info@chack-check.ru
+
+            - name: USERS_SERVICE_FILES_SERVICE_URL
+              value: http://files-service:8000
