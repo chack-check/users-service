@@ -65,4 +65,4 @@ spec:
               value: info@chack-check.ru
 
             - name: USERS_SERVICE_FILES_SERVICE_URL
-              value: files-service:8000
+              value: http://files-service:8000
