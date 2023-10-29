@@ -3,7 +3,6 @@ import strawberry
 from strawberry.types import Info
 
 from ..services.users import UsersSet
-from ..services.verifications import verify_signature
 from ..senders.email import EmailSender
 from ..senders.phone import PhoneSender
 from ..dependencies import CustomContext
@@ -15,7 +14,6 @@ from ..utils import (
 )
 from ..exceptions import IncorrectVerificationSource
 from ..schemas import (
-    AuthenticationSession,
     UserUpdateData,
     UserAuthData,
     UserLoginData,
