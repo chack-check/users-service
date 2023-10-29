@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 
 from pydantic import (
@@ -66,3 +67,8 @@ class UserAuthData(BaseUser):
 class FileUrl(BaseModel):
     filename: str
     url: str
+
+
+class AuthenticationSession(BaseModel):
+    session: str
+    exp: datetime

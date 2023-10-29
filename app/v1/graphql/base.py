@@ -15,12 +15,13 @@ from ..utils import (
 )
 from ..exceptions import IncorrectVerificationSource
 from ..schemas import (
+    AuthenticationSession,
     UserUpdateData,
     UserAuthData,
     UserLoginData,
 )
 from .graph_types import (
-    User, PaginatedUsersResponse, LoginData, Tokens,
+    AuthSessionResponse, User, PaginatedUsersResponse, LoginData, Tokens,
     AuthData, UpdateData, ChangePasswordData,
     ChangeEmailData, VerificationSended,
     VerificationSources,
@@ -93,7 +94,6 @@ class Mutation:
     async def send_verification_code(
         self,
         info: CustomInfo,
-        signature: str,
         phone: str | None = None,
         email: str | None = None,
     ) -> VerificationSended:
@@ -102,7 +102,6 @@ class Mutation:
         if not any((phone, email)) or all((phone, email)):
             raise IncorrectVerificationSource
 
-        verify_signature(field_value, signature)
         verificator = info.context.verificator
         sender = EmailSender() if email else PhoneSender()
         code = await verificator.create_verification_code(field_value)
@@ -113,9 +112,19 @@ class Mutation:
         return VerificationSended(sended=True)
 
     @strawberry.mutation
+    async def verify_code(self,
+                          info: CustomInfo,
+                          code: str,
+                          field: str) -> AuthSessionResponse:
+        verificator = info.context.verificator
+        await verificator.verify_code(field, code)
+        session = await verificator.get_authentication_session(field)
+        return get_schema_from_pydantic(AuthSessionResponse, session)
+
+    @strawberry.mutation
     async def authenticate(self,
                            info: CustomInfo,
-                           code: str,
+                           session: str,
                            verification_source: VerificationSources,
                            auth_data: AuthData) -> Tokens:
         validate_auth_data(auth_data)
@@ -123,7 +132,7 @@ class Mutation:
         data = get_pydantic_from_schema(auth_data, UserAuthData)
         verificator = info.context.verificator
         field: str = getattr(auth_data, verification_source.value)
-        await verificator.verify_code(field, code)
+        await verificator.verify_auth_session(field, session)
         tokens = await users_set.authenticate(data)
         await users_set.confirm_field(tokens.user, verification_source.value)
         assert info.context.background_tasks

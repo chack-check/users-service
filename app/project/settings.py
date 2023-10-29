@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = False
     verification_exp_seconds: int = 10 * 60  # 10 minutes
     verification_attempts_count: int = 7
+    auth_session_exp_seconds: int = 10 * 60
     files_service_url: str
 
 

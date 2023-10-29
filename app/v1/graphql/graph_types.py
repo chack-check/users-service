@@ -76,6 +76,12 @@ class LoginData:
 
 
 @strawberry.type
+class AuthSessionResponse:
+    session: str
+    exp: datetime
+
+
+@strawberry.type
 class Tokens:
     access_token: str
     refresh_token: str

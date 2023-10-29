@@ -95,3 +95,10 @@ class AuthenticationEmailOrPhoneRequired(Exception):
                  message: str = ('You need to specify'
                                  ' email or phone')):
         super().__init__(message)
+
+
+class IncorrectAuthenticationSession(Exception):
+
+    def __init__(self,
+                 message: str = ('Incorrect session')):
+        super().__init__(message)
