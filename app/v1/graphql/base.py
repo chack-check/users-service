@@ -22,7 +22,7 @@ from .graph_types import (
     AuthSessionResponse, User, PaginatedUsersResponse, LoginData, Tokens,
     AuthData, UpdateData, ChangePasswordData,
     ChangeEmailData, VerificationSended,
-    VerificationSources,
+    VerificationSources, ChangePhoneData,
 )
 
 
@@ -94,11 +94,16 @@ class Mutation:
         info: CustomInfo,
         phone: str | None = None,
         email: str | None = None,
+        check_user_existing: bool = False,
     ) -> VerificationSended:
         field_value = phone if phone else email
         assert field_value
         if not any((phone, email)) or all((phone, email)):
             raise IncorrectVerificationSource
+
+        if check_user_existing:
+            users_set = info.context.users_set
+            await users_set.get(**{'email': email} if email else {'phone': phone})
 
         verificator = info.context.verificator
         sender = EmailSender() if email else PhoneSender()
@@ -172,12 +177,48 @@ class Mutation:
 
     @strawberry.mutation
     async def update_password(
-        self, change_password_data: ChangePasswordData
+        self, info: CustomInfo, change_password_data: ChangePasswordData
     ) -> User:
-        ...
+        validate_user_required(info.context.user)
+        users_set = info.context.users_set
+        new_db_user = await users_set.update_password(
+            info.context.user, change_password_data.old_password, change_password_data.new_password
+        )
+        return get_schema_from_pydantic(User, new_db_user)
 
     @strawberry.mutation
     async def update_email(
-        self, change_email_data: ChangeEmailData
+        self, info: CustomInfo, change_email_data: ChangeEmailData
     ) -> User:
-        ...
+        validate_user_required(info.context.user)
+        users_set = info.context.users_set
+        await info.context.verificator.verify_auth_session(change_email_data.old_email, change_email_data.session)
+        new_db_user = await users_set.update_email(
+            info.context.user, change_email_data.new_email
+        )
+        return get_schema_from_pydantic(User, new_db_user)
+
+    @strawberry.mutation
+    async def update_phone(
+        self, info: CustomInfo, change_phone_data: ChangePhoneData
+    ) -> User:
+        validate_user_required(info.context.user)
+        users_set = info.context.users_set
+        await info.context.verificator.verify_auth_session(change_phone_data.old_phone, change_phone_data.session)
+        new_db_user = await users_set.update_phone(
+            info.context.user, change_phone_data.new_phone
+        )
+        return get_schema_from_pydantic(User, new_db_user)
+
+    @strawberry.mutation
+    async def reset_password(self,
+                             info: CustomInfo,
+                             session: str,
+                             email_or_phone: str,
+                             new_password: str) -> Tokens:
+        users_set = info.context.users_set
+        verificator = info.context.verificator
+        await verificator.verify_auth_session(email_or_phone, session)
+        db_user = await users_set.reset_password(email_or_phone, new_password)
+        tokens = users_set.generate_tokens(db_user)
+        return get_schema_from_pydantic(Tokens, tokens)

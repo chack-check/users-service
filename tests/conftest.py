@@ -8,6 +8,7 @@ from app.project.redis import redis_db
 from app.v1.services.users import UsersSet
 from app.v1.services.tokens import TokensSet
 from app.v1.services.sessions import SessionSet
+from app.v1.services.verifications import Verificator
 
 
 @pytest.fixture
@@ -26,6 +27,11 @@ async def users_set() -> UsersSet:
         users_set = UsersSet(s, redis_db)
         yield users_set
         await s.rollback()
+
+
+@pytest.fixture
+def verificator() -> Verificator:
+    return Verificator()
 
 
 @pytest.fixture(scope="session")

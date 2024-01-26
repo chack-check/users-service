@@ -14,6 +14,7 @@ from .schemas import (
     DbUser,
     UserUpdateData,
     UserAuthData,
+    UserPatchData,
 )
 from .models import User
 from .exceptions import UserDoesNotExist
@@ -44,6 +45,13 @@ class UsersQueries:
     ) -> DbUser:
         stmt = select(User).where(or_(User.phone == phone_or_username,
                                       User.username == phone_or_username))
+        return await self._get_user_by_stmt(stmt)
+
+    async def get_by_email_or_phone(
+            self, email_or_phone: str
+    ) -> DbUser:
+        stmt = select(User).where(or_(User.phone == email_or_phone,
+                                      User.email == email_or_phone))
         return await self._get_user_by_stmt(stmt)
 
     async def get_by_id(self, id: int) -> DbUser:
@@ -130,6 +138,16 @@ class UsersQueries:
     async def update(self, user: DbUser,
                      update_data: UserUpdateData) -> DbUser:
         clear_data = update_data.model_dump(exclude_none=True)
+        if not clear_data:
+            return user
+
+        stmt = update(User).returning(User).values(
+            **clear_data
+        ).where(User.id == user.id)
+        return await self._get_user_by_stmt(stmt)
+
+    async def patch(self, user: DbUser, data: UserPatchData) -> DbUser:
+        clear_data = data.model_dump(exclude_none=True)
         if not clear_data:
             return user
 

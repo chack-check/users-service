@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
 from app.project.settings import settings
+from app.project.rmq import connection as rmq_connection, RabbitConnection, get_user_created_message
 from ..crud import UsersQueries
 from ..exceptions import (
     PasswordsNotMatch,
@@ -18,6 +19,7 @@ from ..schemas import (
     UserAuthData,
     UserLoginData,
     UserCredentials,
+    UserPatchData,
 )
 from ..utils import (
     PaginatedData,
@@ -33,11 +35,12 @@ pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 class UsersSet:
 
-    def __init__(self, session: AsyncSession, redis_db: Redis):
+    def __init__(self, session: AsyncSession, redis_db: Redis, rabbit_connection: RabbitConnection = rmq_connection):
         self._redis_db = redis_db
         self._users_queries = UsersQueries(session)
         self._tokens_set = TokensSet()
         self._sessions_set = SessionSet(redis_db)
+        self._rabbit_connection = rabbit_connection
 
     async def get(self, *, id: int | None = None,
                   username: str | None = None,
@@ -148,6 +151,7 @@ class UsersSet:
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
         await self._sessions_set.create(db_user.id, refresh_token)
+        await self._rabbit_connection.send_message(get_user_created_message(db_user))
         return UserCredentials(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -188,3 +192,32 @@ class UsersSet:
 
     async def logout_all(self, user_id: int):
         ...
+
+    async def reset_password(self, email_or_phone: str, newpass: str) -> DbUser:
+        user = await self._users_queries.get_by_email_or_phone(email_or_phone)
+        password_hash = pwd_context.hash(newpass)
+        new_user = await self._users_queries.patch(user, UserPatchData(password=password_hash))
+        return new_user
+
+    async def update_password(self, db_user: DbUser, old_password: str, new_password: str) -> DbUser:
+        self._verify_password(old_password, db_user.password)
+        password_hash = pwd_context.hash(new_password)
+        new_user = await self._users_queries.patch(db_user, UserPatchData(password=password_hash))
+        return new_user
+
+    async def update_email(self, db_user: DbUser, new_email: str) -> DbUser:
+        new_user = await self._users_queries.patch(db_user, UserPatchData(email=new_email))
+        return new_user
+
+    async def update_phone(self, db_user: DbUser, new_phone: str) -> DbUser:
+        new_user = await self._users_queries.patch(db_user, UserPatchData(phone=new_phone))
+        return new_user
+
+    def generate_tokens(self, db_user: DbUser) -> UserCredentials:
+        access_token = self._tokens_set.create_token(db_user, mode='access')
+        refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
+        return UserCredentials(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=db_user,
+        )

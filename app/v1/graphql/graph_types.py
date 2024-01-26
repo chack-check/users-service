@@ -103,4 +103,13 @@ class ChangePasswordData:
 
 @strawberry.input
 class ChangeEmailData:
-    email: EmailStr
+    old_email: EmailStr
+    new_email: EmailStr
+    session: str
+
+
+@strawberry.input
+class ChangePhoneData:
+    old_phone: str
+    new_phone: str
+    session: str

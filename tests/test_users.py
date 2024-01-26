@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select, insert
 
 from app.v1.services.users import UsersSet, pwd_context
+from app.v1.services.verifications import Verificator
 from app.v1.models import User
 from app.v1.exceptions import (
     PasswordsNotMatch,
@@ -289,3 +290,15 @@ async def test_search_with_incorrect_page(users_set: UsersSet):
     assert data.per_page == 20
     assert data.num_pages == math.ceil(len(MANY_USERS_DATA) / 20)
     assert len(data.data) == 20
+
+
+@pytest.mark.asyncio
+async def test_reset_password(users_set: UsersSet, verificator: Verificator):
+    user, = await users_set.get_by_ids([1])
+    session = await verificator.get_authentication_session(user.email)
+    await verificator.verify_auth_session(user.email, session)
+    tokens = await users_set.reset_password(user.email, 'NewPassword123$')
+    new_user, = await users_set.get_by_ids([1])
+
+    assert tokens
+    assert users_set._verify_password('NewPassword123$', new_user.password) is None

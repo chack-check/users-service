@@ -54,6 +54,22 @@ class UserUpdateData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserPatchData(BaseModel):
+    email: EmailStr | None = None
+    username: str | None = None
+    avatar_url: str | None = None
+    phone: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    middle_name: str | None = None
+    password: str | None = None
+    activity: UserActivities | None = None
+    status: str | None = None
+    last_seen: AwareDatetime | None = None
+    email_confirmed: bool | None = None
+    phone_confirmed: bool | None = None
+
+
 class UserLoginData(BaseModel):
     phone_or_username: str
     password: str
