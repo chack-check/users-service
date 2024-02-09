@@ -1,9 +1,8 @@
 from datetime import datetime
 from enum import Enum
 
-import strawberry
 import email_validator
-
+import strawberry
 
 EmailStr = strawberry.scalar(
     str,
@@ -30,8 +29,8 @@ class VerificationSources(Enum):
 class User:
     id: int
     username: str
-    phone: str
-    email: str
+    phone: str | None = None
+    email: str | None = None
     first_name: str
     last_name: str
     middle_name: str | None = None

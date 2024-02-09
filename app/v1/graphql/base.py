@@ -192,7 +192,7 @@ class Mutation:
     ) -> User:
         validate_user_required(info.context.user)
         users_set = info.context.users_set
-        await info.context.verificator.verify_auth_session(change_email_data.old_email, change_email_data.session)
+        await info.context.verificator.verify_auth_session(change_email_data.new_email, change_email_data.session)
         new_db_user = await users_set.update_email(
             info.context.user, change_email_data.new_email
         )

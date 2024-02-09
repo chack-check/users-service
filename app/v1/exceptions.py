@@ -1,26 +1,77 @@
-class IncorrectEmail(Exception):
-    ...
+import json
+from typing import TypedDict
 
 
-class PasswordsNotMatch(Exception):
+class ErrorMessages(TypedDict):
+    general: str | None
+    errors: dict[str, list[str]]
 
-    def __init__(self,
-                 message: str = 'Passwords do not match'):
+
+class BaseGraphqlApiException(Exception):
+
+    def __init__(self, errors: ErrorMessages):
+        message = json.dumps(errors)
         super().__init__(message)
 
 
-class IncorrectPassword(Exception):
+INCORRECT_EMAIL_ERRORS: ErrorMessages = {
+    "general": None,
+    "errors": {
+        "email": ["Incorrect email"]
+    }
+}
 
-    def __init__(self,
-                 message: str = 'Password is incorrect'):
-        super().__init__(message)
+PASSWORDS_NOT_MATCH_ERRORS: ErrorMessages = {
+    "general": None,
+    "errors": {
+        "password_repeat": ["Passwords do not match"],
+    }
+}
+
+INCORRECT_PASSWORD_ERRORS: ErrorMessages = {
+    "general": None,
+    "errors": {
+        "password": ["Incorrect password"]
+    }
+}
+
+USER_WITH_THIS_EMAIL_ALREADY_EXISTS_ERRORS: ErrorMessages = {
+    "general": None,
+    "errors": {
+        "email": ["User with this email already exists"]
+    }
+}
+
+USER_WITH_THIS_USERNAME_ALREADY_EXISTS_ERRORS: ErrorMessages = {
+    "general": None,
+    "errors": {
+        "username": ["User with this username already exists"]
+    }
+}
+
+
+class IncorrectEmail(BaseGraphqlApiException):
+
+    def __init__(self, errors: ErrorMessages = INCORRECT_EMAIL_ERRORS):
+        super().__init__(errors)
+
+
+class PasswordsNotMatch(BaseGraphqlApiException):
+
+    def __init__(self, errors: ErrorMessages = PASSWORDS_NOT_MATCH_ERRORS):
+        super().__init__(errors)
+
+
+class IncorrectPassword(BaseGraphqlApiException):
+
+    def __init__(self, errors: ErrorMessages = INCORRECT_PASSWORD_ERRORS):
+        super().__init__(errors)
 
 
 class UserWithThisEmailAlreadyExists(Exception):
 
-    def __init__(self,
-                 message: str = 'User with this email already exists'):
-        super().__init__(message)
+    def __init__(self, errors: ErrorMessages = USER_WITH_THIS_EMAIL_ALREADY_EXISTS_ERRORS):
+        super().__init__(errors)
 
 
 class UserWithThisUsernameAlreadyExists(Exception):
