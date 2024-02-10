@@ -1,4 +1,4 @@
-import json
+import orjson
 from typing import Any
 
 import aio_pika
@@ -19,11 +19,11 @@ class RabbitConnection:
         self._connection = await aio_pika.connect(self._host)
 
     async def send_message(self, message: bytes):
-        if not self._connection or self._connection.is_closed():
+        if not self._connection or self._connection.is_closed:
             await self.connect()
 
         async with self._connection:
-            channel = await self._connection.channel() if not self._channel else self._channel
+            channel = await self._connection.channel()
             await channel.declare_queue(self._queue_name)
             await channel.default_exchange.publish(
                 aio_pika.Message(body=message),
@@ -32,7 +32,7 @@ class RabbitConnection:
 
 
 def get_user_created_message(user: DbUser) -> dict[str, Any]:
-    return json.dumps({
+    return orjson.dumps({
         "event_type": "user_created",
         "data": user.model_dump(),
     })

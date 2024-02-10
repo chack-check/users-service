@@ -135,7 +135,6 @@ class UsersSet:
         title = f"{db_user.last_name[0]}{db_user.first_name[0]}"
         avatar_svg = generate_avatar(metadata, title)
         files_urls = await files_sender.post_file([avatar_svg])
-        print(files_urls)
         avatar_url = files_urls[0].url if files_urls else None
         await self.update(db_user, UserUpdateData(avatar_url=avatar_url))
 
@@ -151,7 +150,12 @@ class UsersSet:
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
         await self._sessions_set.create(db_user.id, refresh_token)
-        await self._rabbit_connection.send_message(get_user_created_message(db_user))
+        try:
+            await self._rabbit_connection.send_message(get_user_created_message(db_user))
+        except Exception:
+            # TODO: В будущем надо будет сохранить сообщение и потом переотправить + лог ошибки
+            pass
+
         return UserCredentials(
             access_token=access_token,
             refresh_token=refresh_token,
