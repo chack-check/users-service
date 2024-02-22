@@ -66,3 +66,18 @@ spec:
 
             - name: USERS_SERVICE_FILES_SERVICE_URL
               value: http://chack-files-service:8000/api/v1/files/
+
+            - name: USERS_SERVICE_PUBLISHER_RABBIT_QUEUE_NAME
+              value: users-queue
+
+            - name: USERS_SERVICE_PUBLISHER_RABBIT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: url
+
+            - name: USERS_SERVICE_FILES_SIGNATURE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: files-service-credentials
+                  key: signature_key

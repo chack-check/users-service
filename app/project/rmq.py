@@ -1,5 +1,3 @@
-from typing import Any
-
 import aio_pika
 import orjson
 

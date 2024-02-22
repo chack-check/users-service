@@ -7,7 +7,7 @@ from app.v1.factories import AuthDataFactory, UserFactory
 
 from ..dependencies import CustomContext
 from ..exceptions import IncorrectVerificationSource
-from ..schemas import UserAuthData, UserLoginData, UserUpdateData
+from ..schemas import UserLoginData, UserUpdateData
 from ..senders.email import EmailSender
 from ..senders.phone import PhoneSender
 from ..services.users import UsersSet

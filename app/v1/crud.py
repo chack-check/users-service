@@ -2,7 +2,6 @@ from typing import Any, Literal
 
 from sqlalchemy import Select, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import exc, selectinload
 from sqlalchemy.sql.dml import ReturningUpdate
 
 from .exceptions import UserDoesNotExist
