@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     database_url: str
     redis_url: str
     secret_key: str
-    run_mode: Literal['dev', 'stage', 'prod'] = 'dev'
+    run_mode: Literal['dev', 'stage', 'prod', 'test'] = 'dev'
     allow_origins: list[str] = ['*']
     smtp_host: str
     smtp_port: str

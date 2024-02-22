@@ -29,6 +29,18 @@ class RabbitConnection:
             )
 
 
+class MockedConnection:
+
+    def __init__(self, *args, **kwargs):
+        ...
+
+    async def connect(self) -> None:
+        ...
+
+    async def send_message(self, message: bytes):
+        ...
+
+
 def get_user_created_message(user: DbUser) -> bytes:
     return orjson.dumps({
         "event_type": "user_created",
@@ -36,4 +48,7 @@ def get_user_created_message(user: DbUser) -> bytes:
     })
 
 
-connection = RabbitConnection(settings.publisher_rabbit_host, settings.publisher_rabbit_queue_name)
+if settings.run_mode == "test":
+    connection = MockedConnection()
+else:
+    connection = RabbitConnection(settings.publisher_rabbit_host, settings.publisher_rabbit_queue_name)
