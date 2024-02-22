@@ -1,30 +1,36 @@
 from typing import TypeAlias
+
 import strawberry
 from strawberry.types import Info
 
-from ..services.users import UsersSet
+from app.v1.factories import AuthDataFactory, UserFactory
+
+from ..dependencies import CustomContext
+from ..exceptions import IncorrectVerificationSource
+from ..schemas import UserAuthData, UserLoginData, UserUpdateData
 from ..senders.email import EmailSender
 from ..senders.phone import PhoneSender
-from ..dependencies import CustomContext
+from ..services.users import UsersSet
 from ..utils import (
+    get_pydantic_from_schema,
+    get_schema_from_pydantic,
     validate_auth_data,
     validate_user_required,
-    get_schema_from_pydantic,
-    get_pydantic_from_schema,
-)
-from ..exceptions import IncorrectVerificationSource
-from ..schemas import (
-    UserUpdateData,
-    UserAuthData,
-    UserLoginData,
 )
 from .graph_types import (
-    AuthSessionResponse, User, PaginatedUsersResponse, LoginData, Tokens,
-    AuthData, UpdateData, ChangePasswordData,
-    ChangeEmailData, VerificationSended,
-    VerificationSources, ChangePhoneData,
+    AuthData,
+    AuthSessionResponse,
+    ChangeEmailData,
+    ChangePasswordData,
+    ChangePhoneData,
+    LoginData,
+    PaginatedUsersResponse,
+    Tokens,
+    UpdateData,
+    User,
+    VerificationSended,
+    VerificationSources,
 )
-
 
 CustomInfo: TypeAlias = Info[CustomContext, None]
 
@@ -36,7 +42,8 @@ class Query:
     async def user_me(self, info: CustomInfo) -> User:
         validate_user_required(info.context.user)
         assert info.context.user
-        return get_schema_from_pydantic(User, info.context.user)
+        user_schema = UserFactory.schema_from_db_user(info.context.user)
+        return user_schema
 
     @strawberry.field
     async def user(self, info: CustomInfo,
@@ -47,7 +54,7 @@ class Query:
         user = await info.context.users_set.get(
             id=id, username=username, email=email
         )
-        return get_schema_from_pydantic(User, user)
+        return UserFactory.schema_from_db_user(user)
 
     @strawberry.field
     async def users(self,
@@ -59,9 +66,7 @@ class Query:
         paginated_users = await info.context.users_set.search(
             query=query, page=page, per_page=per_page
         )
-        users_list = [get_schema_from_pydantic(
-            User, u
-        ) for u in paginated_users.data]
+        users_list = [UserFactory.schema_from_db_user(u) for u in paginated_users.data]
         return PaginatedUsersResponse(
             page=paginated_users.page,
             num_pages=paginated_users.num_pages,
@@ -74,7 +79,7 @@ class Query:
                            ids: list[int]) -> list[User]:
         validate_user_required(info.context.user)
         users = await info.context.users_set.get_by_ids(ids)
-        users_list = [get_schema_from_pydantic(User, u) for u in users]
+        users_list = [UserFactory.schema_from_db_user(u) for u in users]
         return users_list
 
 
@@ -132,14 +137,15 @@ class Mutation:
                            auth_data: AuthData) -> Tokens:
         validate_auth_data(auth_data)
         users_set = info.context.users_set
-        data = get_pydantic_from_schema(auth_data, UserAuthData)
+        data = AuthDataFactory.pydantic_from_schema(auth_data)
         verificator = info.context.verificator
+        if data.avatar_file:
+            verificator.verify_file(data.avatar_file)
+
         field: str = getattr(auth_data, verification_source.value)
         await verificator.verify_auth_session(field, session)
         tokens = await users_set.authenticate(data)
         await users_set.confirm_field(tokens.user, verification_source.value)
-        assert info.context.background_tasks
-        await users_set.generate_avatar(tokens.access_token, tokens.user)
         return get_schema_from_pydantic(Tokens, tokens)
 
     @strawberry.mutation
@@ -150,7 +156,7 @@ class Mutation:
         users_set = info.context.users_set
         data = get_pydantic_from_schema(update_data, UserUpdateData)
         updated_user = await users_set.update(info.context.user, data)
-        return get_schema_from_pydantic(User, updated_user)
+        return UserFactory.schema_from_db_user(updated_user)
 
     @strawberry.mutation
     async def refresh(self, info: CustomInfo) -> Tokens:
@@ -180,35 +186,38 @@ class Mutation:
         self, info: CustomInfo, change_password_data: ChangePasswordData
     ) -> User:
         validate_user_required(info.context.user)
+        assert info.context.user
         users_set = info.context.users_set
         new_db_user = await users_set.update_password(
             info.context.user, change_password_data.old_password, change_password_data.new_password
         )
-        return get_schema_from_pydantic(User, new_db_user)
+        return UserFactory.schema_from_db_user(new_db_user)
 
     @strawberry.mutation
     async def update_email(
         self, info: CustomInfo, change_email_data: ChangeEmailData
     ) -> User:
         validate_user_required(info.context.user)
+        assert info.context.user
         users_set = info.context.users_set
         await info.context.verificator.verify_auth_session(change_email_data.new_email, change_email_data.session)
         new_db_user = await users_set.update_email(
             info.context.user, change_email_data.new_email
         )
-        return get_schema_from_pydantic(User, new_db_user)
+        return UserFactory.schema_from_db_user(new_db_user)
 
     @strawberry.mutation
     async def update_phone(
         self, info: CustomInfo, change_phone_data: ChangePhoneData
     ) -> User:
         validate_user_required(info.context.user)
+        assert info.context.user
         users_set = info.context.users_set
         await info.context.verificator.verify_auth_session(change_phone_data.old_phone, change_phone_data.session)
         new_db_user = await users_set.update_phone(
             info.context.user, change_phone_data.new_phone
         )
-        return get_schema_from_pydantic(User, new_db_user)
+        return UserFactory.schema_from_db_user(new_db_user)
 
     @strawberry.mutation
     async def reset_password(self,

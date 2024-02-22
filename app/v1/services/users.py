@@ -1,34 +1,34 @@
 from typing import Literal
 
+from passlib.context import CryptContext
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
-from passlib.context import CryptContext
 
+from app.project.rmq import RabbitConnection
+from app.project.rmq import connection as rmq_connection
+from app.project.rmq import get_user_created_message
 from app.project.settings import settings
-from app.project.rmq import connection as rmq_connection, RabbitConnection, get_user_created_message
+
+from ..avatars import generate_avatar
 from ..crud import UsersQueries
 from ..exceptions import (
-    PasswordsNotMatch,
     IncorrectPassword,
     IncorrectToken,
+    PasswordsNotMatch,
     UserDoesNotExist,
 )
+from ..files import FilesSender
 from ..schemas import (
     DbUser,
-    UserUpdateData,
     UserAuthData,
-    UserLoginData,
     UserCredentials,
+    UserLoginData,
     UserPatchData,
+    UserUpdateData,
 )
-from ..utils import (
-    PaginatedData,
-)
-from ..files import FilesSender
-from ..avatars import generate_avatar
-from .tokens import TokensSet
+from ..utils import PaginatedData
 from .sessions import SessionSet
-
+from .tokens import TokensSet
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -37,6 +37,7 @@ class UsersSet:
 
     def __init__(self, session: AsyncSession, redis_db: Redis, rabbit_connection: RabbitConnection = rmq_connection):
         self._redis_db = redis_db
+        self._session = session
         self._users_queries = UsersQueries(session)
         self._tokens_set = TokensSet()
         self._sessions_set = SessionSet(redis_db)
@@ -124,7 +125,7 @@ class UsersSet:
 
     def _validate_passwords(self, password1: str, password2: str):
         if password1 != password2:
-            raise PasswordsNotMatch('Passwords do not match')
+            raise PasswordsNotMatch
 
     async def generate_avatar(self,
                               access_token: str,
@@ -134,28 +135,41 @@ class UsersSet:
         metadata = f"{db_user.last_name} {db_user.first_name}"
         title = f"{db_user.last_name[0]}{db_user.first_name[0]}"
         avatar_svg = generate_avatar(metadata, title)
-        files_urls = await files_sender.post_file([avatar_svg])
+        files_urls = await files_sender.post_file([avatar_svg.encode()])
         avatar_url = files_urls[0].url if files_urls else None
         await self.update(db_user, UserUpdateData(avatar_url=avatar_url))
 
-    async def authenticate(
-            self,
-            auth_data: UserAuthData,
-    ) -> UserCredentials:
+    async def _create_user(self, auth_data: UserAuthData) -> DbUser:
         self._validate_passwords(auth_data.password, auth_data.password_repeat)
         password_hash = pwd_context.hash(auth_data.password)
-        db_user = await self._users_queries.create(
-            auth_data, password=password_hash
-        )
-        access_token = self._tokens_set.create_token(db_user, mode='access')
-        refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
-        await self._sessions_set.create(db_user.id, refresh_token)
+        async with self._session.begin():
+            if auth_data.avatar_file:
+                avatar_id = await self._users_queries.save_avatar_file(auth_data.avatar_file)
+            else:
+                avatar_id = None
+
+            db_user = await self._users_queries.create(
+                auth_data, avatar_id=avatar_id, password=password_hash
+            )
+
+        return db_user
+
+    async def _send_user_creation_message(self, db_user: DbUser) -> None:
         try:
             await self._rabbit_connection.send_message(get_user_created_message(db_user))
         except Exception:
             # TODO: В будущем надо будет сохранить сообщение и потом переотправить + лог ошибки
             pass
 
+    async def authenticate(
+            self,
+            auth_data: UserAuthData,
+    ) -> UserCredentials:
+        db_user = await self._create_user(auth_data)
+        access_token = self._tokens_set.create_token(db_user, mode='access')
+        refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
+        await self._sessions_set.create(db_user.id, refresh_token)
+        await self._send_user_creation_message(db_user)
         return UserCredentials(
             access_token=access_token,
             refresh_token=refresh_token,

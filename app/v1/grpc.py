@@ -1,17 +1,14 @@
 import grpc
 from grpc import aio
 
-from app.protobuf import users_pb2_grpc
-from app.protobuf import users_pb2
 from app.project.db import session
 from app.project.redis import redis_db
+from app.protobuf import users_pb2, users_pb2_grpc
+
 from .crud import UsersQueries
-from .services.users import UsersSet
+from .exceptions import IncorrectToken, UserDoesNotExist
 from .schemas import DbUser
-from .exceptions import (
-    IncorrectToken,
-    UserDoesNotExist,
-)
+from .services.users import UsersSet
 
 
 def get_user_from_pydantic(user: DbUser):
@@ -28,7 +25,6 @@ def get_user_from_pydantic(user: DbUser):
         email_confirmed=user.email_confirmed,
         phone_confirmed=user.phone_confirmed,
         last_seen=user.last_seen.isoformat(),
-        avatar_url=user.avatar_url,
     )
 
 

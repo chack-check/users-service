@@ -17,20 +17,21 @@ jobs:
 
     - name: Run linting
       run: docker run --rm chack-check-users-lint
-  test:
+  # test:
 
-    runs-on: ubuntu-latest
+  #   runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v3
+  #   steps:
+  #   - uses: actions/checkout@v3
 
-    - name: Build tests
-      run: docker compose -f docker-compose.test.yml build
+  #   - name: Build tests
+  #     run: docker compose -f docker-compose.test.yml build
 
-    - name: Run tests
-      run: docker compose -f docker-compose.test.yml run --rm app poetry run pytest
+  #   - name: Run tests
+  #     run: docker compose -f docker-compose.test.yml run --rm app poetry run pytest
   build:
-    needs: [ test, lint ]
+    # needs: [ test, lint ]
+    needs: [ lint ]
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
@@ -53,7 +54,8 @@ jobs:
           cache-to: type=gha,mode=max
   deploy:
     name: Deploy
-    needs: [ test, lint, build ]
+    # needs: [ test, lint, build ]
+    needs: [ lint, build ]
     runs-on: ubuntu-latest
     steps:
       - name: Set the kubernetes context

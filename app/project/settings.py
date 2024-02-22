@@ -1,9 +1,8 @@
-from typing import Literal
 from pathlib import Path
+from typing import Literal
 
 from fastapi.templating import Jinja2Templates
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 BASE_DIR = Path(__file__).parent.parent.parent
 
@@ -30,6 +29,7 @@ class Settings(BaseSettings):
     files_service_url: str
     publisher_rabbit_host: str
     publisher_rabbit_queue_name: str
+    files_signature_secret: str
 
 
 settings = Settings()

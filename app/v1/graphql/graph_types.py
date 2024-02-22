@@ -25,6 +25,34 @@ class VerificationSources(Enum):
     phone = 'phone'
 
 
+@strawberry.enum
+class SystemFiletypes(Enum):
+    avatar = 'avatar'
+    file_in_chat = 'file_in_chat'
+
+
+@strawberry.input
+class UploadFileObject:
+    url: str
+    signature: str
+    filename: str
+    system_filetype: SystemFiletypes
+
+
+@strawberry.input
+class UploadFileData:
+    original_file: UploadFileObject
+    converted_file: UploadFileObject | None = None
+
+
+@strawberry.type
+class UploadedFile:
+    original_url: str
+    original_filename: str
+    converted_url: str | None = None
+    converted_filename: str | None = None
+
+
 @strawberry.type
 class User:
     id: int
@@ -39,7 +67,7 @@ class User:
     email_confirmed: bool
     phone_confirmed: bool
     last_seen: datetime
-    avatar_url: str | None = None
+    avatar: UploadedFile | None = None
 
 
 @strawberry.type
@@ -57,6 +85,7 @@ class AuthData:
     middle_name: str | None = None
     phone: str | None = None
     email: EmailStr | None = None
+    avatar_file: UploadFileData | None = None
 
 
 @strawberry.input
@@ -65,7 +94,6 @@ class UpdateData:
     last_name: str | None = None
     middle_name: str | None = None
     status: str | None = None
-    avatar_url: str | None = None
 
 
 @strawberry.input

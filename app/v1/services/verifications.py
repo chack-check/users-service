@@ -1,18 +1,18 @@
-from datetime import datetime, timedelta
-import hmac
 import hashlib
+import hmac
 import random
 import string
+from datetime import datetime, timedelta, timezone
 
-from app.project.settings import settings
 from app.project.redis import redis_db
+from app.project.settings import settings
 from app.v1.exceptions import (
-    VerificationAttemptsExpired,
-    IncorrectVerificationCode,
-    IncorrectSignature,
     IncorrectAuthenticationSession,
+    IncorrectSignature,
+    IncorrectVerificationCode,
+    VerificationAttemptsExpired,
 )
-from app.v1.schemas import AuthenticationSession
+from app.v1.schemas import AuthenticationSession, SavingFileData, SavingFileObject
 
 
 def verify_signature(phone_or_email: str, signature: str):
@@ -69,7 +69,7 @@ class Verificator:
         session_key = self._get_session_key(email_or_phone)
         session_value = self._generate_session()
         await redis_db.setex(session_key, settings.auth_session_exp_seconds, session_value)
-        exp = datetime.utcnow() + timedelta(seconds=settings.auth_session_exp_seconds)
+        exp = datetime.now(timezone.utc) + timedelta(seconds=settings.auth_session_exp_seconds)
         return AuthenticationSession(session=session_value, exp=exp)
 
     async def verify_auth_session(self, email_or_phone: str, session: str) -> None:
@@ -77,3 +77,17 @@ class Verificator:
         right_session = await redis_db.get(session_key)
         if not right_session or right_session.decode() != session:
             raise IncorrectAuthenticationSession
+
+    def _verify_file_object(self, file_object: SavingFileObject) -> None:
+        file_signature = hmac.new(
+            settings.files_signature_secret.encode(),
+            (f"{file_object.filename}:{file_object.system_filetype.value}").encode(),
+            hashlib.sha256
+        ).hexdigest()
+        if not file_signature == file_object.signature:
+            raise IncorrectSignature
+
+    def verify_file(self, file: SavingFileData) -> None:
+        self._verify_file_object(file.original_file)
+        if file.converted_file:
+            self._verify_file_object(file.converted_file)

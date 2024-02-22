@@ -1,12 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    EmailStr,
-    AwareDatetime,
-)
+from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr
 
 
 class UserActivities(str, Enum):
@@ -16,16 +11,30 @@ class UserActivities(str, Enum):
     away = 'away'
 
 
+class SavingFileSystemFiletypes(Enum):
+    avatar = 'avatar'
+    file_in_chat = 'file_in_chat'
+
+
 class UserCredentials(BaseModel):
     access_token: str
     refresh_token: str
     user: "DbUser"
 
 
+class SavedFile(BaseModel):
+    original_url: str
+    original_filename: str
+    converted_url: str | None = None
+    converted_filename: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class BaseUser(BaseModel):
     email: EmailStr | None = None
     username: str
-    avatar_url: str | None = None
+    avatar: SavedFile | None = None
     phone: str | None = None
     first_name: str
     last_name: str
@@ -49,7 +58,6 @@ class UserUpdateData(BaseModel):
     last_name: str | None = None
     middle_name: str | None = None
     status: str | None = None
-    avatar_url: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -57,7 +65,6 @@ class UserUpdateData(BaseModel):
 class UserPatchData(BaseModel):
     email: EmailStr | None = None
     username: str | None = None
-    avatar_url: str | None = None
     phone: str | None = None
     first_name: str | None = None
     last_name: str | None = None
@@ -75,9 +82,22 @@ class UserLoginData(BaseModel):
     password: str
 
 
+class SavingFileObject(BaseModel):
+    filename: str
+    url: str
+    signature: str
+    system_filetype: SavingFileSystemFiletypes
+
+
+class SavingFileData(BaseModel):
+    original_file: SavingFileObject
+    converted_file: SavingFileObject | None = None
+
+
 class UserAuthData(BaseUser):
     password: str
     password_repeat: str
+    avatar_file: SavingFileData | None = None
 
 
 class FileUrl(BaseModel):

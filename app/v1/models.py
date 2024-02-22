@@ -1,11 +1,24 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TIMESTAMP
 
 from app.project.db import Base
+
 from .schemas import UserActivities
+
+
+class UserAvatar(Base):
+    __tablename__ = "users_avatars"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    original_url: Mapped[str] = mapped_column()
+    original_filename: Mapped[str] = mapped_column()
+    converted_url: Mapped[str] = mapped_column(nullable=True)
+    converted_filename: Mapped[str] = mapped_column(nullable=True)
+    users: Mapped[list["User"]] = relationship(back_populates="avatar")
 
 
 class User(Base):
@@ -13,7 +26,8 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True)
-    avatar_url: Mapped[str] = mapped_column(server_default="https://google.com")  # noqa: E501
+    avatar_id: Mapped[int] = mapped_column(ForeignKey(UserAvatar.id), nullable=True)
+    avatar: Mapped["UserAvatar"] = relationship(back_populates="users", lazy='selectin')
     phone: Mapped[str] = mapped_column(unique=True, nullable=True)
     email: Mapped[str] = mapped_column(unique=True, nullable=True)
     password: Mapped[str] = mapped_column()

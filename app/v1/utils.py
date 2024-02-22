@@ -1,24 +1,23 @@
 import math
-from typing import TypeVar, Generic, NamedTuple, Type, Any
 import re
-from dataclasses import fields, asdict
+from dataclasses import asdict, fields
+from typing import Any, Generic, NamedTuple, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import Select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.v1.graphql.graph_types import AuthData
 
 from .exceptions import (
+    AuthenticationEmailOrPhoneRequired,
     AuthRequired,
     UserWithThisEmailAlreadyExists,
     UserWithThisPhoneAlreadyExists,
     UserWithThisUsernameAlreadyExists,
-    AuthenticationEmailOrPhoneRequired,
 )
 from .schemas import DbUser
-
 
 T = TypeVar('T')
 

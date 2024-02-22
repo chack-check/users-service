@@ -1,28 +1,14 @@
-from typing import Literal, Any
+from typing import Any, Literal
 
+from sqlalchemy import Select, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import (
-    insert,
-    select,
-    or_,
-    Select,
-    func,
-    update,
-)
+from sqlalchemy.orm import exc, selectinload
+from sqlalchemy.sql.dml import ReturningUpdate
 
-from .schemas import (
-    DbUser,
-    UserUpdateData,
-    UserAuthData,
-    UserPatchData,
-)
-from .models import User
 from .exceptions import UserDoesNotExist
-from .utils import (
-    handle_unique_violation,
-    Paginator,
-    PaginatedData,
-)
+from .models import User, UserAvatar
+from .schemas import DbUser, SavingFileData, UserAuthData, UserPatchData, UserUpdateData
+from .utils import PaginatedData, Paginator, handle_unique_violation
 
 
 class UsersQueries:
@@ -30,21 +16,21 @@ class UsersQueries:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def _get_user_by_stmt(self, stmt: Select[tuple[User]]) -> DbUser:
+    async def _get_user_by_stmt(self, stmt: Select[tuple[User]] | ReturningUpdate[tuple[User]]) -> DbUser:
         result = await self._session.execute(stmt)
-        db_users = result.fetchone()
-        if not db_users:
+        db_user = result.scalar_one_or_none()
+        if not db_user:
             raise UserDoesNotExist
 
-        user: User = db_users[0]
-        return DbUser.model_validate(user)
+        return DbUser.model_validate(db_user)
 
     async def get_by_phone_or_username(
             self,
             phone_or_username: str
     ) -> DbUser:
-        stmt = select(User).where(or_(User.phone == phone_or_username,
-                                      User.username == phone_or_username))
+        stmt = select(User).where(
+            or_(User.phone == phone_or_username, User.username == phone_or_username)
+        )
         return await self._get_user_by_stmt(stmt)
 
     async def get_by_email_or_phone(
@@ -80,27 +66,48 @@ class UsersQueries:
             self,
             user_data: UserAuthData,
             password: str,
+            avatar_id: int | None = None,
             field_confirmed: Literal['email', 'phone'] | None = None
     ) -> dict[str, Any]:
-        values = user_data.model_dump()
+        values = user_data.model_dump(exclude={"avatar_file", "avatar"})
         values['password'] = password
         if field_confirmed:
             values[f"{field_confirmed}_confirmed"] = True
 
+        if avatar_id:
+            values["avatar_id"] = avatar_id
+
         del values['password_repeat']
         return values
+
+    async def save_avatar_file(self, file_data: SavingFileData) -> int:
+        avatar_values = {
+            "original_url": file_data.original_file.url,
+            "original_filename": file_data.original_file.filename,
+            "converted_url": file_data.converted_file.url if file_data.converted_file else None,
+            "converted_filename": file_data.converted_file.filename if file_data.converted_file else None,
+        }
+        stmt = insert(UserAvatar).returning(UserAvatar.id).values(**avatar_values)
+        result = await self._session.execute(stmt)
+        result_id = result.scalar_one()
+        return result_id
 
     @handle_unique_violation
     async def create(
             self, user_data: UserAuthData, password: str,
+            avatar_id: int | None = None,
             field_confirmed: Literal['email', 'phone'] | None = None
     ) -> DbUser:
         values = self._get_creation_data(
-            user_data, password, field_confirmed
+            user_data, password, avatar_id, field_confirmed
         )
         stmt = insert(User).returning(User).values(**values)
         result = await self._session.execute(stmt)
-        return DbUser.model_validate(result.fetchone()[0])
+        result_user = result.scalar_one_or_none()
+        if not result_user:
+            raise ValueError(f"There is no created user: {result_user=}")
+
+        return DbUser.model_validate(result_user)
 
     def _get_user_name_filters(self, query: str):
         filters = []

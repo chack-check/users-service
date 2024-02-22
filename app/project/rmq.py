@@ -1,7 +1,7 @@
-import orjson
 from typing import Any
 
 import aio_pika
+import orjson
 
 from app.project.settings import settings
 from app.v1.schemas import DbUser
@@ -31,7 +31,7 @@ class RabbitConnection:
             )
 
 
-def get_user_created_message(user: DbUser) -> dict[str, Any]:
+def get_user_created_message(user: DbUser) -> bytes:
     return orjson.dumps({
         "event_type": "user_created",
         "data": user.model_dump(),
