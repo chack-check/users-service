@@ -65,3 +65,11 @@ $ make migrations name="Some migration name"
 ```
 
 `Some migration name` - имя создаваемой миграции
+
+## Регенерация protobuf
+
+В директории `app` запустить следующую команду:
+
+```
+$ python -m grpc_tools.protoc -I . --python_out=./protobuf --pyi_out=./protobuf --grpc_python_out=./protobuf users.proto
+```

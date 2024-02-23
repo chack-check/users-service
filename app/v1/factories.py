@@ -1,5 +1,7 @@
 from dataclasses import asdict, fields
 
+from app.protobuf import users_pb2
+
 from .graphql.graph_types import AuthData, UploadedFile, User
 from .schemas import DbUser, SavedFile, UserAuthData
 
@@ -20,6 +22,25 @@ class UserFactory:
         user_schema = User(**user.model_dump(include=include_fields))
         user_schema.avatar = UploadedFileFactory.schema_from_pydantic(user.avatar) if user.avatar else None
         return user_schema
+
+    @staticmethod
+    def get_grpc_from_db_user(user: DbUser) -> users_pb2.UserResponse:
+        return users_pb2.UserResponse(
+            id=user.id,
+            username=user.username,
+            phone=user.phone,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            middle_name=user.middle_name,
+            activity=user.activity,
+            status=user.status,
+            email_confirmed=user.email_confirmed,
+            phone_confirmed=user.phone_confirmed,
+            last_seen=user.last_seen.isoformat(),
+            original_avatar_url=user.avatar.original_url if user.avatar else None,
+            converted_avatar_url=user.avatar.converted_url if user.avatar else None,
+        )
 
 
 class AuthDataFactory:

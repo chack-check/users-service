@@ -3,29 +3,12 @@ from grpc import aio
 
 from app.project.db import session
 from app.project.redis import redis_db
-from app.protobuf import users_pb2, users_pb2_grpc
+from app.protobuf import users_pb2_grpc
 
 from .crud import UsersQueries
 from .exceptions import IncorrectToken, UserDoesNotExist
-from .schemas import DbUser
+from .factories import UserFactory
 from .services.users import UsersSet
-
-
-def get_user_from_pydantic(user: DbUser):
-    return users_pb2.UserResponse(
-        id=user.id,
-        username=user.username,
-        phone=user.phone,
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        middle_name=user.middle_name,
-        activity=user.activity,
-        status=user.status,
-        email_confirmed=user.email_confirmed,
-        phone_confirmed=user.phone_confirmed,
-        last_seen=user.last_seen.isoformat(),
-    )
 
 
 def handle_doesnt_exist_user(func):
@@ -47,7 +30,7 @@ class Users(users_pb2_grpc.UsersServicer):
         async with session() as s:
             users_queries = UsersQueries(s)
             db_user = await users_queries.get_by_id(request.id)
-            return get_user_from_pydantic(db_user)
+            return UserFactory.get_grpc_from_db_user(db_user)
 
     @handle_doesnt_exist_user
     async def GetUserByToken(self, request, context):
@@ -57,7 +40,7 @@ class Users(users_pb2_grpc.UsersServicer):
                 request.token, raise_exception=True
             )
             assert db_user
-            return get_user_from_pydantic(db_user)
+            return UserFactory.get_grpc_from_db_user(db_user)
 
     @handle_doesnt_exist_user
     async def GetUserByRefreshToken(self, request, context):
@@ -67,7 +50,7 @@ class Users(users_pb2_grpc.UsersServicer):
                 request.token, raise_exception=True
             )
             assert db_user
-            return get_user_from_pydantic(db_user)
+            return UserFactory.get_grpc_from_db_user(db_user)
 
 
 async def start_server():
