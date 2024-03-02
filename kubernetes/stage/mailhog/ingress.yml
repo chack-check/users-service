@@ -10,10 +10,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-      - mailhog.chack-check.ru
+      - mailhog.diffaction.com
     secretName: letsencrypt
   rules:
-  - host: mailhog.chack-check.ru
+  - host: mailhog.diffaction.com
     http:
       paths:
       - path: /

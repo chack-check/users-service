@@ -10,10 +10,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-      - stage.chack-check.ru
+      - stage.diffaction.com
     secretName: letsencrypt
   rules:
-  - host: stage.chack-check.ru
+  - host: stage.diffaction.com
     http:
       paths:
       - path: /api/v1/users
