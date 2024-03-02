@@ -35,8 +35,17 @@ message GetUserByTokenRequest {
     string token = 1;
 }
 
+message GetUsersByIdsRequest {
+    repeated int32 ids = 1;
+}
+
+message UsersArrayResponse {
+    repeated UserResponse users = 1;
+}
+
 service Users {
     rpc GetUserById(GetUserByIdRequest) returns (UserResponse) {}
+    rpc GetUsersByIds(GetUsersByIdsRequest) returns (UsersArrayResponse) {}
     rpc GetUserByUsername(GetUserByUsernameRequest) returns (UserResponse) {}
     rpc GetUserByEmail(GetUserByEmailRequest) returns (UserResponse) {}
     rpc GetUserByToken(GetUserByTokenRequest) returns (UserResponse) {}

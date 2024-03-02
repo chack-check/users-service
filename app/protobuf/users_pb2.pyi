@@ -1,6 +1,7 @@
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Optional as _Optional
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -59,3 +60,15 @@ class GetUserByTokenRequest(_message.Message):
     TOKEN_FIELD_NUMBER: _ClassVar[int]
     token: str
     def __init__(self, token: _Optional[str] = ...) -> None: ...
+
+class GetUsersByIdsRequest(_message.Message):
+    __slots__ = ("ids",)
+    IDS_FIELD_NUMBER: _ClassVar[int]
+    ids: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, ids: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class UsersArrayResponse(_message.Message):
+    __slots__ = ("users",)
+    USERS_FIELD_NUMBER: _ClassVar[int]
+    users: _containers.RepeatedCompositeFieldContainer[UserResponse]
+    def __init__(self, users: _Optional[_Iterable[_Union[UserResponse, _Mapping]]] = ...) -> None: ...

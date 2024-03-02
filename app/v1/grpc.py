@@ -3,7 +3,7 @@ from grpc import aio
 
 from app.project.db import session
 from app.project.redis import redis_db
-from app.protobuf import users_pb2_grpc
+from app.protobuf import users_pb2, users_pb2_grpc
 
 from .crud import UsersQueries
 from .exceptions import IncorrectToken, UserDoesNotExist
@@ -31,6 +31,12 @@ class Users(users_pb2_grpc.UsersServicer):
             users_queries = UsersQueries(s)
             db_user = await users_queries.get_by_id(request.id)
             return UserFactory.get_grpc_from_db_user(db_user)
+
+    async def GetUsersByIds(self, request, context):
+        async with session() as s:
+            users_queries = UsersQueries(s)
+            db_users = await users_queries.get_by_ids(request.ids)
+            return users_pb2.UsersArrayResponse(users=[UserFactory.get_grpc_from_db_user(user) for user in db_users])
 
     @handle_doesnt_exist_user
     async def GetUserByToken(self, request, context):

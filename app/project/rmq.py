@@ -1,5 +1,6 @@
 import aio_pika
 import orjson
+from aio_pika.abc import AbstractConnection
 
 from app.project.settings import settings
 from app.v1.schemas import DbUser
@@ -8,10 +9,10 @@ from app.v1.schemas import DbUser
 class RabbitConnection:
 
     def __init__(self, host: str,
-                 queue_name: str):
+                 exchange_name: str):
         self._host = host
-        self._queue_name = queue_name
-        self._connection: aio_pika.Connection | None = None
+        self._exchange_name = exchange_name
+        self._connection: AbstractConnection | None = None
 
     async def connect(self) -> None:
         self._connection = await aio_pika.connect(self._host)
@@ -20,12 +21,13 @@ class RabbitConnection:
         if not self._connection or self._connection.is_closed:
             await self.connect()
 
+        assert self._connection
         async with self._connection:
             channel = await self._connection.channel()
-            await channel.declare_queue(self._queue_name)
-            await channel.default_exchange.publish(
-                aio_pika.Message(body=message),
-                routing_key=self._queue_name
+            exchange = await channel.declare_exchange(self._exchange_name, aio_pika.ExchangeType.FANOUT, durable=True)
+            await exchange.publish(
+                aio_pika.Message(body=message, content_type="application/json"),
+                routing_key=""
             )
 
 
@@ -51,4 +53,4 @@ def get_user_created_message(user: DbUser) -> bytes:
 if settings.run_mode == "test":
     connection = MockedConnection()
 else:
-    connection = RabbitConnection(settings.publisher_rabbit_host, settings.publisher_rabbit_queue_name)
+    connection = RabbitConnection(settings.publisher_rabbit_host, settings.publisher_rabbit_exchange_name)

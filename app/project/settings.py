@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     auth_session_exp_seconds: int = 10 * 60
     files_service_url: str
     publisher_rabbit_host: str
-    publisher_rabbit_queue_name: str
+    publisher_rabbit_exchange_name: str
     files_signature_secret: str
 
 
