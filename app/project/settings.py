@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     publisher_rabbit_host: str
     publisher_rabbit_exchange_name: str
     files_signature_secret: str
+    avatar_service_url: str
 
 
 settings = Settings()

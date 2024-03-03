@@ -78,6 +78,12 @@ class Verificator:
         if not right_session or right_session.decode() != session:
             raise IncorrectAuthenticationSession
 
+    async def clear_verifications(self, email_or_phone: str) -> None:
+        session_key = self._get_session_key(email_or_phone)
+        attempts_key = self._get_verification_attempts_key(email_or_phone)
+        verification_key = self._get_verification_key(email_or_phone)
+        await redis_db.delete(session_key, attempts_key, verification_key)
+
     def _verify_file_object(self, file_object: SavingFileObject) -> None:
         file_signature = hmac.new(
             settings.files_signature_secret.encode(),

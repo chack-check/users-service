@@ -146,6 +146,7 @@ class Mutation:
         await verificator.verify_auth_session(field, session)
         tokens = await users_set.authenticate(data)
         await users_set.confirm_field(tokens.user, verification_source.value)
+        await verificator.clear_verifications(field)
         return get_schema_from_pydantic(Tokens, tokens)
 
     @strawberry.mutation
