@@ -48,7 +48,7 @@ spec:
               value: "stage"
 
             - name: USERS_SERVICE_ALLOW_ORIGINS
-              value: "[\"stage.chack-check.ru\"]"
+              value: "[\"stage.diffaction.com\"]"
 
             - name: USERS_SERVICE_SMTP_HOST
               value: mailhog-service

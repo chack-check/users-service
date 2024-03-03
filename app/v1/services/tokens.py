@@ -1,13 +1,13 @@
+import datetime
 import json
 from typing import Literal
-import datetime
 
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 
-from ..schemas import DbUser
-from ..exceptions import IncorrectToken
 from app.project.settings import settings
 
+from ..exceptions import IncorrectToken
+from ..schemas import DbUser
 
 ACCESS_TOKEN_EXP_DELTA = datetime.timedelta(days=1)
 
@@ -29,7 +29,7 @@ class TokensSet:
     def create_token(self, user: DbUser,
                      mode: Literal['refresh', 'access']) -> str:
         exp_delta = self._get_exp_delta(mode)
-        exp = datetime.datetime.utcnow() + exp_delta
+        exp = datetime.datetime.now(datetime.timezone.utc) + exp_delta
         token_sub = {'user_id': user.id, 'username': user.username}
         token_sub_json = json.dumps(token_sub)
         encode_data = {'sub': token_sub_json, 'exp': exp}
@@ -39,9 +39,13 @@ class TokensSet:
         try:
             payload = jwt.decode(token, settings.secret_key,
                                  algorithms=[ALGORITHM])
-            assert payload['exp'] > datetime.datetime.utcnow().timestamp()
+            if not payload['exp'] > datetime.datetime.now(datetime.timezone.utc).timestamp():
+                raise IncorrectToken
+
             decoded_sub = json.loads(payload['sub'])
-            assert 'user_id' in decoded_sub
+            if not "user_id" in decoded_sub:
+                raise IncorrectToken
+
             return decoded_sub['user_id']
-        except (AssertionError, KeyError, JWTError):
+        except (KeyError, JWTError):
             raise IncorrectToken
