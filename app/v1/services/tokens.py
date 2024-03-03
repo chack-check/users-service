@@ -43,7 +43,7 @@ class TokensSet:
                 raise IncorrectToken
 
             decoded_sub = json.loads(payload['sub'])
-            if not "user_id" in decoded_sub:
+            if "user_id" not in decoded_sub:
                 raise IncorrectToken
 
             return decoded_sub['user_id']
