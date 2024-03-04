@@ -57,7 +57,25 @@ spec:
               value: "1025"
 
             - name: USERS_SERVICE_SMTP_FROM
-              value: info@chack-check.ru
+              value: info@diffaction.com
 
             - name: USERS_SERVICE_FILES_SERVICE_URL
-              value: http://files-service:8000
+              value: http://chack-files-service:8000/api/v1/files/
+
+            - name: USERS_SERVICE_PUBLISHER_RABBIT_EXCHANGE_NAME
+              value: users_exchange
+
+            - name: USERS_SERVICE_PUBLISHER_RABBIT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: url
+
+            - name: USERS_SERVICE_FILES_SIGNATURE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: files-service-credentials
+                  key: signature_key
+
+            - name: USERS_SERVICE_AVATAR_SERVICE_URL
+              value: https://stage.diffaction.com/api/v1/avatar
