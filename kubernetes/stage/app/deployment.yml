@@ -53,7 +53,7 @@ spec:
               value: "stage"
 
             - name: USERS_SERVICE_ALLOW_ORIGINS
-              value: "[\"stage.diffaction.com\"]"
+              value: "[\"*\"]"
 
             - name: USERS_SERVICE_SMTP_HOST
               value: mailhog-service
