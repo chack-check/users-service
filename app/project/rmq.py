@@ -1,9 +1,11 @@
+import logging
+
 import aio_pika
-import orjson
 from aio_pika.abc import AbstractConnection
 
 from app.project.settings import settings
-from app.v1.schemas import DbUser
+
+logger = logging.getLogger(__file__)
 
 
 class RabbitConnection:
@@ -25,6 +27,7 @@ class RabbitConnection:
         async with self._connection:
             channel = await self._connection.channel()
             exchange = await channel.declare_exchange(self._exchange_name, aio_pika.ExchangeType.FANOUT, durable=True)
+            logger.info(f"Sending event to rabbitmq: {message=}")
             await exchange.publish(
                 aio_pika.Message(body=message, content_type="application/json"),
                 routing_key=""
@@ -41,13 +44,6 @@ class MockedConnection:
 
     async def send_message(self, message: bytes):
         ...
-
-
-def get_user_created_message(user: DbUser) -> bytes:
-    return orjson.dumps({
-        "event_type": "user_created",
-        "data": user.model_dump(),
-    })
 
 
 if settings.run_mode == "test":

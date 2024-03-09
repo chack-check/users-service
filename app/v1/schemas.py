@@ -108,3 +108,9 @@ class FileUrl(BaseModel):
 class AuthenticationSession(BaseModel):
     session: str
     exp: datetime
+
+
+class UserEvent(BaseModel):
+    event_type: str
+    included_users: list[int]
+    data: str

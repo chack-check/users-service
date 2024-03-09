@@ -6,10 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.project.rmq import RabbitConnection
 from app.project.rmq import connection as rmq_connection
-from app.project.rmq import get_user_created_message
-from app.project.settings import settings
+from app.v1.factories import UserFactory
 
-from ..avatars import generate_avatar
 from ..crud import UsersQueries
 from ..exceptions import (
     IncorrectPassword,
@@ -17,9 +15,9 @@ from ..exceptions import (
     PasswordsNotMatch,
     UserDoesNotExist,
 )
-from ..files import FilesSender
 from ..schemas import (
     DbUser,
+    SavingFileData,
     UserAuthData,
     UserCredentials,
     UserLoginData,
@@ -127,18 +125,6 @@ class UsersSet:
         if password1 != password2:
             raise PasswordsNotMatch
 
-    async def generate_avatar(self,
-                              access_token: str,
-                              db_user: DbUser) -> str | None:
-        headers = {"Authorization": f"Bearer {access_token}"}
-        files_sender = FilesSender(settings.files_service_url, headers)
-        metadata = f"{db_user.last_name} {db_user.first_name}"
-        title = f"{db_user.last_name[0]}{db_user.first_name[0]}"
-        avatar_svg = generate_avatar(metadata, title)
-        files_urls = await files_sender.post_file([avatar_svg.encode()])
-        avatar_url = files_urls[0].url if files_urls else None
-        await self.update(db_user, UserUpdateData(avatar_url=avatar_url))
-
     async def _create_user(self, auth_data: UserAuthData) -> DbUser:
         self._validate_passwords(auth_data.password, auth_data.password_repeat)
         password_hash = pwd_context.hash(auth_data.password)
@@ -154,9 +140,10 @@ class UsersSet:
 
         return db_user
 
-    async def _send_user_creation_message(self, db_user: DbUser) -> None:
+    async def _send_rabbit_event(self, db_user: DbUser, event_type: str, included_users: list[int] | None = None) -> None:
         try:
-            await self._rabbit_connection.send_message(get_user_created_message(db_user))
+            event = UserFactory.event_from_dto(db_user, event_type, included_users)
+            await self._rabbit_connection.send_message(event.model_dump_json().encode())
         except Exception:
             # TODO: В будущем надо будет сохранить сообщение и потом переотправить + лог ошибки
             pass
@@ -169,7 +156,7 @@ class UsersSet:
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
         await self._sessions_set.create(db_user.id, refresh_token)
-        await self._send_user_creation_message(db_user)
+        await self._send_rabbit_event(db_user, "user_created")
         return UserCredentials(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -191,6 +178,7 @@ class UsersSet:
     async def update(self, user: DbUser,
                      update_data: UserUpdateData) -> DbUser:
         db_user = await self._users_queries.update(user, update_data)
+        await self._send_rabbit_event(db_user, "user_changed")
         return db_user
 
     async def refresh(self, user: DbUser,
@@ -225,11 +213,19 @@ class UsersSet:
 
     async def update_email(self, db_user: DbUser, new_email: str) -> DbUser:
         new_user = await self._users_queries.patch(db_user, UserPatchData(email=new_email))
+        await self._send_rabbit_event(db_user, "user_changed")
         return new_user
 
     async def update_phone(self, db_user: DbUser, new_phone: str) -> DbUser:
         new_user = await self._users_queries.patch(db_user, UserPatchData(phone=new_phone))
+        await self._send_rabbit_event(db_user, "user_changed")
         return new_user
+
+    async def update_avatar(self, db_user: DbUser, new_avatar: SavingFileData | None = None) -> DbUser:
+        await self._users_queries.update_avatar(db_user, new_avatar)
+        db_user = await self._users_queries.get_by_id(db_user.id)
+        await self._send_rabbit_event(db_user, "user_changed")
+        return db_user
 
     def generate_tokens(self, db_user: DbUser) -> UserCredentials:
         access_token = self._tokens_set.create_token(db_user, mode='access')

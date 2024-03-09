@@ -4,8 +4,16 @@ from urllib.parse import urljoin
 from app.project.settings import settings
 from app.protobuf import users_pb2
 
-from .graphql.graph_types import AuthData, UploadedFile, User
-from .schemas import DbUser, SavedFile, UserAuthData
+from .graphql.graph_types import AuthData, UploadedFile, UploadFileData, User
+from .schemas import (
+    DbUser,
+    SavedFile,
+    SavingFileData,
+    SavingFileObject,
+    SavingFileSystemFiletypes,
+    UserAuthData,
+    UserEvent,
+)
 
 
 def get_default_avatar_url(username: str) -> str:
@@ -56,6 +64,34 @@ class UserFactory:
             last_seen=user.last_seen.isoformat(),
             original_avatar_url=user.avatar.original_url if user.avatar and user.avatar.original_url else get_default_avatar_url(user.username),
             converted_avatar_url=user.avatar.converted_url if user.avatar and user.avatar.converted_url else None,
+        )
+
+    @staticmethod
+    def event_from_dto(user: DbUser, event_type: str, included_users: list[int] | None = None) -> UserEvent:
+        return UserEvent(
+            event_type=event_type,
+            included_users=included_users if included_users else [],
+            data=user.model_dump_json(exclude={"password"}),
+        )
+
+
+class FileFactory:
+
+    @staticmethod
+    def pydantic_from_schema(file: UploadFileData) -> SavingFileData:
+        return SavingFileData(
+            original_file=SavingFileObject(
+                filename=file.original_file.filename,
+                url=file.original_file.url,
+                signature=file.original_file.signature,
+                system_filetype=SavingFileSystemFiletypes(file.original_file.system_filetype.value),
+            ),
+            converted_file=SavingFileObject(
+                filename=file.converted_file.filename,
+                url=file.converted_file.url,
+                signature=file.converted_file.signature,
+                system_filetype=SavingFileSystemFiletypes(file.converted_file.system_filetype.value),
+            ) if file.converted_file else None,
         )
 
 

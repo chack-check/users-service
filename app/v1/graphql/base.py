@@ -3,7 +3,7 @@ from typing import TypeAlias
 import strawberry
 from strawberry.types import Info
 
-from app.v1.factories import AuthDataFactory, UserFactory
+from app.v1.factories import AuthDataFactory, FileFactory, UserFactory
 
 from ..dependencies import CustomContext
 from ..exceptions import IncorrectVerificationSource
@@ -27,6 +27,7 @@ from .graph_types import (
     PaginatedUsersResponse,
     Tokens,
     UpdateData,
+    UploadFileData,
     User,
     VerificationSended,
     VerificationSources,
@@ -108,7 +109,10 @@ class Mutation:
 
         if check_user_existing:
             users_set = info.context.users_set
-            await users_set.get(**{'email': email} if email else {'phone': phone})
+            await users_set.get(
+                email=email if email else None,
+                phone=phone if phone else None
+            )
 
         verificator = info.context.verificator
         sender = EmailSender() if email else PhoneSender()
@@ -158,6 +162,18 @@ class Mutation:
         data = get_pydantic_from_schema(update_data, UserUpdateData)
         updated_user = await users_set.update(info.context.user, data)
         return UserFactory.schema_from_db_user(updated_user)
+
+    @strawberry.mutation
+    async def update_avatar(self, info: CustomInfo, new_avatar: UploadFileData | None) -> User:
+        validate_user_required(info.context.user)
+        assert info.context.user
+        users_set = info.context.users_set
+        new_avatar_data = FileFactory.pydantic_from_schema(new_avatar) if new_avatar else None
+        if new_avatar_data:
+            info.context.verificator.verify_file(new_avatar_data)
+
+        db_user = await users_set.update_avatar(info.context.user, new_avatar_data)
+        return UserFactory.schema_from_db_user(db_user)
 
     @strawberry.mutation
     async def refresh(self, info: CustomInfo) -> Tokens:

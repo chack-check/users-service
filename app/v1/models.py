@@ -40,5 +40,5 @@ class User(Base):
     phone_confirmed: Mapped[bool] = mapped_column(default=False)
     last_seen: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
-        default=datetime.utcnow().astimezone(ZoneInfo('UTC')),
+        default=datetime.now().astimezone(ZoneInfo('UTC')),
     )

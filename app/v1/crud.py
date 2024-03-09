@@ -1,6 +1,6 @@
 from typing import Any, Literal
 
-from sqlalchemy import Select, func, insert, or_, select, update
+from sqlalchemy import Select, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.dml import ReturningUpdate
 
@@ -172,4 +172,17 @@ class UsersQueries:
         stmt = update(User).values(
             phone_confirmed=True
         ).where(User.id == user.id)
+        await self._session.execute(stmt)
+
+    async def update_avatar(self, db_user: DbUser, new_avatar: SavingFileData | None = None) -> None:
+        if new_avatar:
+            stmt = update(UserAvatar).values(
+                original_url=new_avatar.original_file.url,
+                original_filename=new_avatar.original_file.filename,
+                converted_url=new_avatar.converted_file.url if new_avatar.converted_file else None,
+                converted_filename=new_avatar.converted_file.filename if new_avatar.converted_file else None,
+            ).where(UserAvatar.users.any(User.id == db_user.id))
+        else:
+            stmt = delete(UserAvatar).where(UserAvatar.users.contains(db_user.id))
+
         await self._session.execute(stmt)
