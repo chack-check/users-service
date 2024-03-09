@@ -182,7 +182,11 @@ class UsersQueries:
                 converted_url=new_avatar.converted_file.url if new_avatar.converted_file else None,
                 converted_filename=new_avatar.converted_file.filename if new_avatar.converted_file else None,
             ).where(UserAvatar.users.any(User.id == db_user.id))
+            print(stmt)
         else:
-            stmt = delete(UserAvatar).where(UserAvatar.users.contains(db_user.id))
+            update_user_avatar_id_stmt = update(User).values(avatar_id=None).where(User.id == db_user.id)
+            await self._session.execute(update_user_avatar_id_stmt)
+            stmt = delete(UserAvatar).where(UserAvatar.users.any(User.id == db_user.id))
+            print(stmt)
 
         await self._session.execute(stmt)
