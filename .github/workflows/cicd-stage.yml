@@ -79,13 +79,6 @@ jobs:
             kubernetes/stage/mailhog/service.yml
             kubernetes/stage/mailhog/ingress.yml
 
-      - name: Deploy migrations
-        uses: azure/k8s-deploy@v1
-        with:
-          namespace: stage
-          manifests: |
-            kubernetes/stage/app/migrations.yml
-
       - name: Deploy app
         uses: azure/k8s-deploy@v1
         with:

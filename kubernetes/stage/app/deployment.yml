@@ -15,6 +15,70 @@ spec:
       labels:
         app: chack-users-service
     spec:
+      initContainers:
+        - name: migrate-users-service
+          image: artemowkin/chack-users-service:latest
+          command: ["sh", "-c", "alembic upgrade head"]
+          env:
+            - name: USERS_SERVICE_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: database_url
+
+            - name: USERS_SERVICE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: secret_key
+
+            - name: USERS_SERVICE_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: redis_url
+
+            - name: USERS_SERVICE_SENTRY_LINK
+              valueFrom:
+                secretKeyRef:
+                  name: users-service-credentials
+                  key: sentry_link
+
+            - name: USERS_SERVICE_RUN_MDOE
+              value: "stage"
+
+            - name: USERS_SERVICE_ALLOW_ORIGINS
+              value: "[\"stage.diffaction.com\"]"
+
+            - name: USERS_SERVICE_SMTP_HOST
+              value: mailhog-service
+
+            - name: USERS_SERVICE_SMTP_PORT
+              value: "1025"
+
+            - name: USERS_SERVICE_SMTP_FROM
+              value: info@diffaction.com
+
+            - name: USERS_SERVICE_FILES_SERVICE_URL
+              value: http://chack-files-service:8000/api/v1/files/
+
+            - name: USERS_SERVICE_PUBLISHER_RABBIT_EXCHANGE_NAME
+              value: users_exchange
+
+            - name: USERS_SERVICE_PUBLISHER_RABBIT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: url
+
+            - name: USERS_SERVICE_FILES_SIGNATURE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: files-service-credentials
+                  key: signature_key
+
+            - name: USERS_SERVICE_AVATAR_SERVICE_URL
+              value: https://stage.diffaction.com/api/v1/avatar
       containers:
         - name: chack-users-service
           image: artemowkin/chack-users-service:latest
