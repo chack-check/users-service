@@ -4,9 +4,18 @@ from urllib.parse import urljoin
 from app.project.settings import settings
 from app.protobuf import users_pb2
 
-from .graphql.graph_types import AuthData, UploadedFile, UploadFileData, User
+from .graphql.graph_types import (
+    AuthData,
+    Permission,
+    PermissionCategory,
+    UploadedFile,
+    UploadFileData,
+    User,
+)
 from .schemas import (
     DbUser,
+    PermissionCategoryDto,
+    PermissionDto,
     SavedFile,
     SavingFileData,
     SavingFileObject,
@@ -34,17 +43,34 @@ class UploadedFileFactory:
         return UploadedFile(original_url=file_url, original_filename=filename)
 
 
+class PermissionCategoryFactory:
+
+    @staticmethod
+    def schema_from_dto(category: PermissionCategoryDto) -> PermissionCategory:
+        return PermissionCategory(**category.model_dump())
+
+
+class PermissionFactory:
+
+    @staticmethod
+    def schema_from_dto(permission: PermissionDto) -> Permission:
+        permission_schema = Permission(**permission.model_dump(exclude={"category", "id"}))
+        permission_schema.category = PermissionCategoryFactory.schema_from_dto(permission.category) if permission.category else None
+        return permission_schema
+
+
 class UserFactory:
 
     @staticmethod
     def schema_from_db_user(user: DbUser) -> User:
         include_fields = {field.name for field in fields(User)}
-        user_schema = User(**user.model_dump(include=include_fields))
+        user_schema = User(**user.model_dump(include=include_fields, exclude={"permissions"}))
         if user.avatar:
             user_schema.avatar = UploadedFileFactory.schema_from_pydantic(user.avatar)
         else:
             user_schema.avatar = UploadedFileFactory.default_schema_from_username(user.username)
 
+        user_schema.permissions = [PermissionFactory.schema_from_dto(permission) for permission in user.permissions]
         return user_schema
 
     @staticmethod

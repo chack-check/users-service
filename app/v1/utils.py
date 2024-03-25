@@ -8,11 +8,13 @@ from sqlalchemy import Select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.v1.constants import UserPermissionsEnum
 from app.v1.graphql.graph_types import AuthData
 
 from .exceptions import (
     AuthenticationEmailOrPhoneRequired,
     AuthRequired,
+    PermissionRequired,
     UserWithThisEmailAlreadyExists,
     UserWithThisPhoneAlreadyExists,
     UserWithThisUsernameAlreadyExists,
@@ -39,6 +41,11 @@ def validate_auth_data(data: AuthData) -> None:
 def validate_user_required(user: DbUser | None) -> None:
     if not user:
         raise AuthRequired()
+
+
+def validate_user_permissions(user: DbUser, permissions: list[UserPermissionsEnum]) -> None:
+    if not set(permissions).issubset([perm.code for perm in user.permissions]):
+        raise PermissionRequired([perm.value for perm in permissions])
 
 
 def get_schema_from_pydantic(schema, model: K):
@@ -92,7 +99,7 @@ class Paginator(Generic[T, K]):
 
     async def _get_count(self) -> int:
         result = await self._session.execute(self._count_query)
-        count = result.fetchone()[0]
+        count = result.scalar_one()
         return count
 
     async def _get_data(self, offset: int, per_page: int):

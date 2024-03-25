@@ -3,11 +3,23 @@ from typing import TypeAlias
 import strawberry
 from strawberry.types import Info
 
-from app.v1.factories import AuthDataFactory, FileFactory, UserFactory
+from app.v1.constants import UserPermissionsEnum
+from app.v1.factories import (
+    AuthDataFactory,
+    FileFactory,
+    PermissionCategoryFactory,
+    PermissionFactory,
+    UserFactory,
+)
 
 from ..dependencies import CustomContext
 from ..exceptions import IncorrectVerificationSource
-from ..schemas import UserLoginData, UserUpdateData
+from ..schemas import (
+    CreatePermissionCategoryDto,
+    CreatePermissionDto,
+    UserLoginData,
+    UserUpdateData,
+)
 from ..senders.email import EmailSender
 from ..senders.phone import PhoneSender
 from ..services.users import UsersSet
@@ -15,6 +27,7 @@ from ..utils import (
     get_pydantic_from_schema,
     get_schema_from_pydantic,
     validate_auth_data,
+    validate_user_permissions,
     validate_user_required,
 )
 from .graph_types import (
@@ -23,12 +36,17 @@ from .graph_types import (
     ChangeEmailData,
     ChangePasswordData,
     ChangePhoneData,
+    CreatePermissionCategoryData,
+    CreatePermissionData,
     LoginData,
     PaginatedUsersResponse,
+    Permission,
+    PermissionCategory,
     Tokens,
     UpdateData,
     UploadFileData,
     User,
+    UserPermissionsCodes,
     VerificationSended,
     VerificationSources,
 )
@@ -82,6 +100,12 @@ class Query:
         users = await info.context.users_set.get_by_ids(ids)
         users_list = [UserFactory.schema_from_db_user(u) for u in users]
         return users_list
+
+    @strawberry.field
+    async def all_permissions(self, info: CustomInfo) -> list[Permission]:
+        validate_user_required(info.context.user)
+        permissions = await info.context.permission_service.get_all()
+        return [PermissionFactory.schema_from_dto(perm) for perm in permissions]
 
 
 @strawberry.type
@@ -248,3 +272,31 @@ class Mutation:
         db_user = await users_set.reset_password(email_or_phone, new_password)
         tokens = users_set.generate_tokens(db_user)
         return get_schema_from_pydantic(Tokens, tokens)
+
+    @strawberry.mutation
+    async def create_permission_category(self, info: CustomInfo, data: CreatePermissionCategoryData) -> PermissionCategory:
+        validate_user_required(info.context.user)
+        assert info.context.user
+        validate_user_permissions(info.context.user, [UserPermissionsEnum.create_permission_categories])
+        create_data = CreatePermissionCategoryDto.model_validate(data)
+        created_category = await info.context.permission_service.create_category(create_data)
+        return PermissionCategoryFactory.schema_from_dto(created_category)
+
+    @strawberry.mutation
+    async def create_permission(self, info: CustomInfo, data: CreatePermissionData) -> Permission:
+        validate_user_required(info.context.user)
+        assert info.context.user
+        validate_user_permissions(info.context.user, [UserPermissionsEnum.create_permissions])
+        create_data = CreatePermissionDto.model_validate(data)
+        created_permission = await info.context.permission_service.create_permission(create_data)
+        return PermissionFactory.schema_from_dto(created_permission)
+
+    @strawberry.mutation
+    async def set_user_permissions(self, info: CustomInfo, user_id: int, permissions: list[str]) -> User:
+        validate_user_required(info.context.user)
+        assert info.context.user
+        validate_user_permissions(info.context.user, [UserPermissionsEnum.set_user_permissions])
+        updating_user = await info.context.users_set.get(id=user_id)
+        new_permissions = await info.context.permission_service.get_by_codes(permissions)
+        updated_user = await info.context.users_set.set_permissions(updating_user, new_permissions)
+        return UserFactory.schema_from_db_user(updated_user)

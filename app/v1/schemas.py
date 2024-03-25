@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr
+from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserActivities(str, Enum):
@@ -41,6 +41,36 @@ class BaseUser(BaseModel):
     middle_name: str | None = None
 
 
+class CreatePermissionDto(BaseModel):
+    code: str
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CreatePermissionCategoryDto(BaseModel):
+    code: str
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PermissionCategoryDto(BaseModel):
+    code: str
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PermissionDto(BaseModel):
+    code: str
+    name: str
+    category: PermissionCategoryDto | None = None
+    id: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class DbUser(BaseUser):
     password: str
     id: int
@@ -49,6 +79,7 @@ class DbUser(BaseUser):
     last_seen: AwareDatetime
     email_confirmed: bool = False
     phone_confirmed: bool = False
+    permissions: list[PermissionDto] = Field([])
 
     model_config = ConfigDict(from_attributes=True)
 

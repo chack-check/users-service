@@ -1,3 +1,4 @@
+import logging
 from typing import Literal
 
 from passlib.context import CryptContext
@@ -17,6 +18,7 @@ from ..exceptions import (
 )
 from ..schemas import (
     DbUser,
+    PermissionDto,
     SavingFileData,
     UserAuthData,
     UserCredentials,
@@ -29,6 +31,8 @@ from .sessions import SessionSet
 from .tokens import TokensSet
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
+logger = logging.getLogger(__name__)
 
 
 class UsersSet:
@@ -62,6 +66,9 @@ class UsersSet:
                              " value: id|username|email|phone")
 
         return user
+
+    async def set_permissions(self, user: DbUser, new_permissions: list[PermissionDto]) -> DbUser:
+        return await self._users_queries.set_permissions(user, new_permissions)
 
     async def get_from_token(self, token: str, *,
                              raise_exception: bool = True) -> DbUser | None:
@@ -144,8 +151,9 @@ class UsersSet:
         try:
             event = UserFactory.event_from_dto(db_user, event_type, included_users)
             await self._rabbit_connection.send_message(event.model_dump_json().encode())
-        except Exception:
-            # TODO: В будущем надо будет сохранить сообщение и потом переотправить + лог ошибки
+        except Exception as e:
+            # TODO: В будущем надо будет сохранить сообщение и потом переотправить
+            logger.exception(e)
             pass
 
     async def authenticate(
@@ -222,6 +230,7 @@ class UsersSet:
         return new_user
 
     async def update_avatar(self, db_user: DbUser, new_avatar: SavingFileData | None = None) -> DbUser:
+        logger.info(f"Saving new avatar for user id={db_user.id}. Saving file: {new_avatar}")
         await self._users_queries.update_avatar(db_user, new_avatar)
         db_user = await self._users_queries.get_by_id(db_user.id)
         await self._send_rabbit_event(db_user, "user_changed")

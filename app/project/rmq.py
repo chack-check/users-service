@@ -5,7 +5,7 @@ from aio_pika.abc import AbstractConnection
 
 from app.project.settings import settings
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class RabbitConnection:
@@ -17,7 +17,7 @@ class RabbitConnection:
         self._connection: AbstractConnection | None = None
 
     async def connect(self) -> None:
-        self._connection = await aio_pika.connect(self._host)
+        self._connection = await aio_pika.connect_robust(self._host)
 
     async def send_message(self, message: bytes):
         if not self._connection or self._connection.is_closed:
@@ -30,8 +30,10 @@ class RabbitConnection:
             logger.info(f"Sending event to rabbitmq: {message=}")
             await exchange.publish(
                 aio_pika.Message(body=message, content_type="application/json"),
-                routing_key=""
+                routing_key="",
+                timeout=2
             )
+            logger.info(f"Sended event to rabbitmq: {message=}")
 
 
 class MockedConnection:

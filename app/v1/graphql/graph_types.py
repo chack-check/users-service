@@ -4,6 +4,8 @@ from enum import Enum
 import email_validator
 import strawberry
 
+from ..constants import UserPermissionsEnum
+
 EmailStr = strawberry.scalar(
     str,
     serialize=lambda v: email_validator.validate_email(v).normalized,
@@ -17,6 +19,9 @@ class UserActivities(Enum):
     offline = 'offline'
     call = 'call'
     away = 'away'
+
+
+UserPermissionsCodes = strawberry.enum(UserPermissionsEnum)
 
 
 @strawberry.enum
@@ -53,6 +58,31 @@ class UploadedFile:
     converted_filename: str | None = None
 
 
+@strawberry.input
+class CreatePermissionData:
+    code: str
+    name: str
+
+
+@strawberry.input
+class CreatePermissionCategoryData:
+    code: str
+    name: str
+
+
+@strawberry.type
+class PermissionCategory:
+    code: str
+    name: str
+
+
+@strawberry.type
+class Permission:
+    code: str
+    name: str
+    category: PermissionCategory | None = None
+
+
 @strawberry.type
 class User:
     id: int
@@ -68,6 +98,7 @@ class User:
     phone_confirmed: bool
     last_seen: datetime
     avatar: UploadedFile | None = None
+    permissions: list[Permission] = strawberry.field(default_factory=list)
 
 
 @strawberry.type

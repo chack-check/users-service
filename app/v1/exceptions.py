@@ -110,6 +110,18 @@ class AuthRequired(Exception):
         super().__init__(message)
 
 
+class PermissionRequired(Exception):
+
+    def __init__(self, permissions: list[str]):
+        super().__init__(f"Permission denied. You need to have the following permissions: {', '.join(permissions)}")
+
+
+class PermissionCategoryAlreadyExists(Exception):
+
+    def __init__(self, message = "Category with this code already exists"):
+        super().__init__(message)
+
+
 class IncorrectVerificationSource(Exception):
 
     def __init__(self,

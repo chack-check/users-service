@@ -5,8 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.dml import ReturningUpdate
 
 from .exceptions import UserDoesNotExist
-from .models import User, UserAvatar
-from .schemas import DbUser, SavingFileData, UserAuthData, UserPatchData, UserUpdateData
+from .models import User, UserAvatar, user_permission
+from .schemas import (
+    DbUser,
+    PermissionDto,
+    SavingFileData,
+    UserAuthData,
+    UserPatchData,
+    UserUpdateData,
+)
 from .utils import PaginatedData, Paginator, handle_unique_violation
 
 
@@ -182,11 +189,24 @@ class UsersQueries:
                 converted_url=new_avatar.converted_file.url if new_avatar.converted_file else None,
                 converted_filename=new_avatar.converted_file.filename if new_avatar.converted_file else None,
             ).where(UserAvatar.users.any(User.id == db_user.id))
-            print(stmt)
         else:
             update_user_avatar_id_stmt = update(User).values(avatar_id=None).where(User.id == db_user.id)
             await self._session.execute(update_user_avatar_id_stmt)
             stmt = delete(UserAvatar).where(UserAvatar.users.any(User.id == db_user.id))
-            print(stmt)
 
         await self._session.execute(stmt)
+
+    async def set_permissions(self, db_user: DbUser, new_permissions: list[PermissionDto]) -> DbUser:
+        stmt = delete(user_permission).where(user_permission.c.user_id == db_user.id)
+        await self._session.execute(stmt)
+        if new_permissions:
+            stmt = insert(user_permission).values(
+                [{"user_id": db_user.id, "permission_id": perm.id} for perm in new_permissions]
+            )
+            await self._session.execute(stmt)
+
+        stmt = select(User).where(User.id == db_user.id)
+        result = await self._session.execute(stmt)
+        updated_user = result.scalar_one()
+        return DbUser.model_validate(updated_user)
+        
