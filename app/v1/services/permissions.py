@@ -1,4 +1,3 @@
-from psycopg.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 
 from app.v1.exceptions import PermissionCategoryAlreadyExists

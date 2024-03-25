@@ -118,7 +118,7 @@ class PermissionRequired(Exception):
 
 class PermissionCategoryAlreadyExists(Exception):
 
-    def __init__(self, message = "Category with this code already exists"):
+    def __init__(self, message="Category with this code already exists"):
         super().__init__(message)
 
 

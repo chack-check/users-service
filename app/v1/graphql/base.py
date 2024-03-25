@@ -46,7 +46,6 @@ from .graph_types import (
     UpdateData,
     UploadFileData,
     User,
-    UserPermissionsCodes,
     VerificationSended,
     VerificationSources,
 )

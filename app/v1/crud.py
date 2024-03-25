@@ -209,4 +209,3 @@ class UsersQueries:
         result = await self._session.execute(stmt)
         updated_user = result.scalar_one()
         return DbUser.model_validate(updated_user)
-        
