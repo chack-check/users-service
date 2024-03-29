@@ -76,13 +76,13 @@ class UsersSet:
 
     async def get_from_token(self, token: str, *,
                              raise_exception: bool = True) -> DbUser | None:
-        logger.debug(f"Getting user from token")
+        logger.debug("Getting user from token")
         try:
             user_id = self._tokens_set.decode_token(token)
             logger.debug(f"Fetched user_id: {user_id=}")
             return await self._users_queries.get_by_id(user_id)
         except (IncorrectToken, UserDoesNotExist):
-            logger.warning(f"Incorrect token or user does not exists")
+            logger.warning("Incorrect token or user does not exists")
             if raise_exception:
                 raise
 
@@ -92,7 +92,7 @@ class UsersSet:
             self, token: str, *,
             raise_exception: bool = True
     ) -> DbUser | None:
-        logger.debug(f"Getting user by refresh token")
+        logger.debug("Getting user by refresh token")
         try:
             user_id = self._tokens_set.decode_token(token)
             logger.debug(f"Fetched user id by refresh token: {user_id=}")
@@ -107,7 +107,7 @@ class UsersSet:
 
             return await self._users_queries.get_by_id(user_id)
         except UserDoesNotExist:
-            logger.warning(f"User does not exist when fetching by refresh token")
+            logger.warning("User does not exist when fetching by refresh token")
             if raise_exception:
                 raise
 
@@ -247,7 +247,7 @@ class UsersSet:
         logger.debug(f"Fetched user by {email_or_phone=} {user=}")
         password_hash = pwd_context.hash(newpass)
         new_user = await self._users_queries.patch(user, UserPatchData(password=password_hash))
-        logger.debug(f"User password reseted")
+        logger.debug("User password reseted")
         return new_user
 
     async def update_password(self, db_user: DbUser, old_password: str, new_password: str) -> DbUser:
