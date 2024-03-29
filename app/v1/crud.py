@@ -181,20 +181,40 @@ class UsersQueries:
         ).where(User.id == user.id)
         await self._session.execute(stmt)
 
-    async def update_avatar(self, db_user: DbUser, new_avatar: SavingFileData | None = None) -> None:
-        if new_avatar:
-            stmt = update(UserAvatar).values(
-                original_url=new_avatar.original_file.url,
-                original_filename=new_avatar.original_file.filename,
-                converted_url=new_avatar.converted_file.url if new_avatar.converted_file else None,
-                converted_filename=new_avatar.converted_file.filename if new_avatar.converted_file else None,
-            ).where(UserAvatar.users.any(User.id == db_user.id))
-        else:
-            update_user_avatar_id_stmt = update(User).values(avatar_id=None).where(User.id == db_user.id)
-            await self._session.execute(update_user_avatar_id_stmt)
-            stmt = delete(UserAvatar).where(UserAvatar.users.any(User.id == db_user.id))
-
+    async def _save_user_avatar(self, db_user: DbUser, new_avatar: SavingFileData) -> None:
+        stmt = insert(UserAvatar).values(
+            original_url=new_avatar.original_file.url,
+            original_filename=new_avatar.original_file.filename,
+            converted_url=new_avatar.converted_file.url if new_avatar.converted_file else None,
+            converted_filename=new_avatar.converted_file.filename if new_avatar.converted_file else None,
+        ).returning(UserAvatar.id)
+        result = await self._session.execute(stmt)
+        avatar_id = result.scalar_one()
+        stmt = update(User).values(avatar_id=avatar_id).where(User.id == db_user.id)
         await self._session.execute(stmt)
+
+    async def _update_user_avatar(self, db_user: DbUser, new_avatar: SavingFileData) -> None:
+        stmt = update(UserAvatar).values(
+            original_url=new_avatar.original_file.url,
+            original_filename=new_avatar.original_file.filename,
+            converted_url=new_avatar.converted_file.url if new_avatar.converted_file else None,
+            converted_filename=new_avatar.converted_file.filename if new_avatar.converted_file else None,
+        ).where(UserAvatar.users.any(User.id == db_user.id))
+        await self._session.execute(stmt)
+
+    async def _clear_user_avatar(self, db_user: DbUser) -> None:
+        update_user_avatar_id_stmt = update(User).values(avatar_id=None).where(User.id == db_user.id)
+        await self._session.execute(update_user_avatar_id_stmt)
+        stmt = delete(UserAvatar).where(UserAvatar.users.any(User.id == db_user.id))
+        await self._session.execute(stmt)
+
+    async def update_avatar(self, db_user: DbUser, new_avatar: SavingFileData | None = None) -> None:
+        if not db_user.avatar and new_avatar:
+            await self._save_user_avatar(db_user, new_avatar)
+        elif new_avatar:
+            await self._update_user_avatar(db_user, new_avatar)
+        else:
+            await self._clear_user_avatar(db_user)
 
     async def set_permissions(self, db_user: DbUser, new_permissions: list[PermissionDto]) -> DbUser:
         stmt = delete(user_permission).where(user_permission.c.user_id == db_user.id)
