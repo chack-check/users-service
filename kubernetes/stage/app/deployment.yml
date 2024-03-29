@@ -15,7 +15,7 @@ spec:
       labels:
         app: chack-users-service
     spec:
-      initContainers:
+      containers:
         - name: migrate-users-service
           image: artemowkin/chack-users-service:latest
           command: ["alembic", "upgrade", "head"]
@@ -79,7 +79,6 @@ spec:
 
             - name: USERS_SERVICE_AVATAR_SERVICE_URL
               value: https://stage.diffaction.com/api/v1/avatar
-      containers:
         - name: chack-users-service
           image: artemowkin/chack-users-service:latest
           ports:
