@@ -49,6 +49,7 @@ class UsersSet:
                   username: str | None = None,
                   email: str | None = None,
                   phone: str | None = None) -> DbUser:
+        logger.debug(f"Getting user by params: {id=} {username=} {email=}")
         assert any((id, username, email, phone)), "Specify get field"
         assert len(list(filter(bool, (id, username, email, phone)))) == 1, (
             "You can specify only one get field"
@@ -62,20 +63,26 @@ class UsersSet:
         elif phone:
             user = await self._users_queries.get_by_phone(phone)
         else:
+            logger.error("There is no specified field value to get user")
             raise ValueError("You need to specify one field"
                              " value: id|username|email|phone")
 
+        logger.debug(f"Fetched user: {user=}")
         return user
 
     async def set_permissions(self, user: DbUser, new_permissions: list[PermissionDto]) -> DbUser:
+        logger.debug(f"Setting permissions for user: {user=} {new_permissions=}")
         return await self._users_queries.set_permissions(user, new_permissions)
 
     async def get_from_token(self, token: str, *,
                              raise_exception: bool = True) -> DbUser | None:
+        logger.debug(f"Getting user from token")
         try:
             user_id = self._tokens_set.decode_token(token)
+            logger.debug(f"Fetched user_id: {user_id=}")
             return await self._users_queries.get_by_id(user_id)
         except (IncorrectToken, UserDoesNotExist):
+            logger.warning(f"Incorrect token or user does not exists")
             if raise_exception:
                 raise
 
@@ -85,16 +92,22 @@ class UsersSet:
             self, token: str, *,
             raise_exception: bool = True
     ) -> DbUser | None:
+        logger.debug(f"Getting user by refresh token")
         try:
             user_id = self._tokens_set.decode_token(token)
+            logger.debug(f"Fetched user id by refresh token: {user_id=}")
+            logger.debug(f"Getting user sessions: {user_id=}")
             has_session = await self._sessions_set.has_user_session(
                 user_id, token
             )
+            logger.debug(f"User has sessions: {has_session=} {user_id=}")
             if not has_session:
+                logger.warning(f"User has no session {user_id=}")
                 raise UserDoesNotExist
 
             return await self._users_queries.get_by_id(user_id)
         except UserDoesNotExist:
+            logger.warning(f"User does not exist when fetching by refresh token")
             if raise_exception:
                 raise
 
@@ -108,6 +121,7 @@ class UsersSet:
         return paginated_users
 
     async def get_by_ids(self, ids: list[int]) -> list[DbUser]:
+        logger.debug(f"Getting users by ids: {ids=}")
         return await self._users_queries.get_by_ids(ids)
 
     def _verify_password(self, password: str, hash_: str) -> None:
@@ -115,12 +129,15 @@ class UsersSet:
             raise IncorrectPassword
 
     async def login(self, login_data: UserLoginData) -> UserCredentials:
+        logger.debug(f"Logging in user by data: {login_data=}")
         db_user = await self._users_queries.get_by_phone_or_username(
             login_data.phone_or_username
         )
+        logger.debug(f"Fetched user from login data: {login_data=} {db_user=}")
         self._verify_password(login_data.password, db_user.password)
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
+        logger.debug(f"Generated tokens for user {db_user=}")
         await self._sessions_set.create(db_user.id, refresh_token)
         return UserCredentials(
             access_token=access_token,
@@ -137,20 +154,26 @@ class UsersSet:
         password_hash = pwd_context.hash(auth_data.password)
         async with self._session.begin():
             if auth_data.avatar_file:
+                logger.debug(f"Saving avatar file for creating user: {auth_data.avatar_file=}")
                 avatar_id = await self._users_queries.save_avatar_file(auth_data.avatar_file)
+                logger.debug(f"Saved avatar file id: {avatar_id=}")
             else:
                 avatar_id = None
 
+            logger.debug(f"Creating user in db: {auth_data=} {avatar_id=}")
             db_user = await self._users_queries.create(
                 auth_data, avatar_id=avatar_id, password=password_hash
             )
+            logger.debug(f"Saved user in db: {db_user=}")
 
         return db_user
 
     async def _send_rabbit_event(self, db_user: DbUser, event_type: str, included_users: list[int] | None = None) -> None:
         try:
             event = UserFactory.event_from_dto(db_user, event_type, included_users)
+            logger.debug(f"Sending event to rabbitmq: {event=} {db_user=}")
             await self._rabbit_connection.send_message(event.model_dump_json().encode())
+            logger.debug(f"Event {event=} sended to rabbitmq")
         except Exception as e:
             # TODO: В будущем надо будет сохранить сообщение и потом переотправить
             logger.exception(e)
@@ -160,9 +183,12 @@ class UsersSet:
             self,
             auth_data: UserAuthData,
     ) -> UserCredentials:
+        logger.debug(f"Authenticating user by {auth_data=}")
         db_user = await self._create_user(auth_data)
+        logger.debug(f"Saved db user when authenticating: {db_user=}")
         access_token = self._tokens_set.create_token(db_user, mode='access')
         refresh_token = self._tokens_set.create_token(db_user, mode='refresh')
+        logger.debug(f"Generated access and refresh tokens for authenticated user: {db_user=}")
         await self._sessions_set.create(db_user.id, refresh_token)
         await self._send_rabbit_event(db_user, "user_created")
         return UserCredentials(
@@ -173,7 +199,9 @@ class UsersSet:
 
     async def confirm_field(self, user: DbUser,
                             field: Literal['email', 'phone']):
+        logger.debug(f"Confirming fields: {user=} {field=}")
         field_confirmed = getattr(user, f"{field}_confirmed")
+        logger.debug(f"Field already confirmed: {field_confirmed=}")
         if field_confirmed:
             return
 
@@ -185,19 +213,25 @@ class UsersSet:
 
     async def update(self, user: DbUser,
                      update_data: UserUpdateData) -> DbUser:
+        logger.debug(f"Updating user: {user=} {update_data=}")
         db_user = await self._users_queries.update(user, update_data)
+        logger.debug(f"Updated user: {db_user=}")
         await self._send_rabbit_event(db_user, "user_changed")
         return db_user
 
     async def refresh(self, user: DbUser,
                       refresh_token: str) -> UserCredentials:
+        logger.debug(f"Refreshing tokens for user: {user=}")
         has_session = await self._sessions_set.has_user_session(
             user.id, refresh_token
         )
+        logger.debug(f"User has session: {user=} {has_session=}")
         if not has_session:
+            logger.warning(f"User have no session {user=} {has_session=}")
             raise IncorrectToken
 
         new_access_token = self._tokens_set.create_token(user, mode='access')
+        logger.debug(f"Generated new access token for user {user=}")
         return UserCredentials(
             access_token=new_access_token,
             refresh_token=refresh_token,
@@ -208,31 +242,41 @@ class UsersSet:
         ...
 
     async def reset_password(self, email_or_phone: str, newpass: str) -> DbUser:
+        logger.debug(f"Reseting password for user {email_or_phone=}")
         user = await self._users_queries.get_by_email_or_phone(email_or_phone)
+        logger.debug(f"Fetched user by {email_or_phone=} {user=}")
         password_hash = pwd_context.hash(newpass)
         new_user = await self._users_queries.patch(user, UserPatchData(password=password_hash))
+        logger.debug(f"User password reseted")
         return new_user
 
     async def update_password(self, db_user: DbUser, old_password: str, new_password: str) -> DbUser:
+        logger.debug(f"Updating user password {db_user=}")
         self._verify_password(old_password, db_user.password)
         password_hash = pwd_context.hash(new_password)
         new_user = await self._users_queries.patch(db_user, UserPatchData(password=password_hash))
+        logger.debug(f"Updated password for user {db_user=}")
         return new_user
 
     async def update_email(self, db_user: DbUser, new_email: str) -> DbUser:
+        logger.debug(f"Updating email for user {db_user=} {new_email=}")
         new_user = await self._users_queries.patch(db_user, UserPatchData(email=new_email))
+        logger.debug(f"Updated email for user {new_user=}")
         await self._send_rabbit_event(db_user, "user_changed")
         return new_user
 
     async def update_phone(self, db_user: DbUser, new_phone: str) -> DbUser:
+        logger.debug(f"Updating phone for user {db_user=} {new_phone=}")
         new_user = await self._users_queries.patch(db_user, UserPatchData(phone=new_phone))
+        logger.debug(f"Updated phone for user {db_user=} {new_phone=}")
         await self._send_rabbit_event(db_user, "user_changed")
         return new_user
 
     async def update_avatar(self, db_user: DbUser, new_avatar: SavingFileData | None = None) -> DbUser:
-        logger.info(f"Saving new avatar for user id={db_user.id}. Saving file: {new_avatar}")
+        logger.debug(f"Saving new avatar for user id={db_user.id}. Saving file: {new_avatar}")
         await self._users_queries.update_avatar(db_user, new_avatar)
         db_user = await self._users_queries.get_by_id(db_user.id)
+        logger.debug(f"Updated user avatar {db_user=}")
         await self._send_rabbit_event(db_user, "user_changed")
         return db_user
 
