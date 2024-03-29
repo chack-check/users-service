@@ -94,6 +94,7 @@ class UserFactory:
 
     @staticmethod
     def event_from_dto(user: DbUser, event_type: str, included_users: list[int] | None = None) -> UserEvent:
+        user.avatar = SavedFile(original_url=get_default_avatar_url(user.username), original_filename=f"{user.username}.svg")
         return UserEvent(
             event_type=event_type,
             included_users=included_users if included_users else [],

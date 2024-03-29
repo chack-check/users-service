@@ -152,20 +152,18 @@ class UsersSet:
     async def _create_user(self, auth_data: UserAuthData) -> DbUser:
         self._validate_passwords(auth_data.password, auth_data.password_repeat)
         password_hash = pwd_context.hash(auth_data.password)
-        async with self._session.begin():
-            if auth_data.avatar_file:
-                logger.debug(f"Saving avatar file for creating user: {auth_data.avatar_file=}")
-                avatar_id = await self._users_queries.save_avatar_file(auth_data.avatar_file)
-                logger.debug(f"Saved avatar file id: {avatar_id=}")
-            else:
-                avatar_id = None
+        if auth_data.avatar_file:
+            logger.debug(f"Saving avatar file for creating user: {auth_data.avatar_file=}")
+            avatar_id = await self._users_queries.save_avatar_file(auth_data.avatar_file)
+            logger.debug(f"Saved avatar file id: {avatar_id=}")
+        else:
+            avatar_id = None
 
-            logger.debug(f"Creating user in db: {auth_data=} {avatar_id=}")
-            db_user = await self._users_queries.create(
-                auth_data, avatar_id=avatar_id, password=password_hash
-            )
-            logger.debug(f"Saved user in db: {db_user=}")
-
+        logger.debug(f"Creating user in db: {auth_data=} {avatar_id=}")
+        db_user = await self._users_queries.create(
+            auth_data, avatar_id=avatar_id, password=password_hash
+        )
+        logger.debug(f"Saved user in db: {db_user=}")
         return db_user
 
     async def _send_rabbit_event(self, db_user: DbUser, event_type: str, included_users: list[int] | None = None) -> None:
