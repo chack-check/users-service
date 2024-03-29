@@ -5,7 +5,7 @@ from aio_pika.abc import AbstractConnection
 
 from app.project.settings import settings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 class RabbitConnection:

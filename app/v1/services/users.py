@@ -32,7 +32,7 @@ from .tokens import TokensSet
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 class UsersSet:

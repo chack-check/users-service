@@ -87,7 +87,7 @@ spec:
               name: web
             - containerPort: 9090
               name: grpc
-          command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
           env:
             - name: USERS_SERVICE_DATABASE_URL
               valueFrom:

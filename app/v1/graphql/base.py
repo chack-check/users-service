@@ -1,3 +1,4 @@
+import logging
 from typing import TypeAlias
 
 import strawberry
@@ -52,12 +53,15 @@ from .graph_types import (
 
 CustomInfo: TypeAlias = Info[CustomContext, None]
 
+logger = logging.getLogger("uvicorn.error")
+
 
 @strawberry.type
 class Query:
 
     @strawberry.field
     async def user_me(self, info: CustomInfo) -> User:
+        logger.debug(f"Getting current user {info.context.user=}")
         validate_user_required(info.context.user)
         assert info.context.user
         user_schema = UserFactory.schema_from_db_user(info.context.user)

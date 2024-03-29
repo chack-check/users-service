@@ -15,7 +15,7 @@ from app.v1.exceptions import (
 )
 from app.v1.schemas import AuthenticationSession, SavingFileData, SavingFileObject
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 def verify_signature(phone_or_email: str, signature: str):

@@ -42,7 +42,7 @@ services:
       - ./app:/src/app
       - ./templates:/src/templates
       - ./alembic:/src/alembic
-    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
     env_file:
       - .env.dev
     ports:
