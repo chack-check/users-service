@@ -1,20 +1,23 @@
 import asyncio
+import logging
 
 import sentry_sdk
+import strawberry
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import strawberry
 from strawberry.fastapi import GraphQLRouter
 
-from app.v1.dependencies import get_context
-from app.v1.graphql.base import Query, Mutation
-from app.v1.grpc import start_server
-from app.project.settings import settings
 from app.project.rmq import connection
+from app.project.settings import settings
+from app.v1.dependencies import get_context
+from app.v1.graphql.base import Mutation, Query
+from app.v1.grpc import start_server
 
+logger = logging.getLogger("uvicorn.error")
 
+logger.debug(f"Initing sentry for dsn: {settings.sentry_link}. Environment: {settings.run_mode}")
 if settings.sentry_link:
-    sentry_sdk.init(settings.sentry_link)
+    sentry_sdk.init(settings.sentry_link, environment=settings.run_mode)
 
 schema_v1 = strawberry.Schema(Query, Mutation)
 
