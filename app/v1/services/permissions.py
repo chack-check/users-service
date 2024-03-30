@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy.exc import IntegrityError
 
 from app.v1.exceptions import PermissionCategoryAlreadyExists
@@ -9,6 +11,8 @@ from app.v1.schemas import (
     PermissionDto,
 )
 
+logger = logging.getLogger("uvicorn.error")
+
 
 class PermissionService:
 
@@ -16,19 +20,25 @@ class PermissionService:
         self._repository = repository
 
     async def get_all(self) -> list[PermissionDto]:
+        logger.debug(f"Getting all permissions")
         return await self._repository.get_all()
 
     async def create_category(self, category_data: CreatePermissionCategoryDto) -> PermissionCategoryDto:
+        logger.debug(f"Creating permissions category {category_data=}")
         try:
             return await self._repository.create_category(category_data)
-        except IntegrityError:
+        except IntegrityError as e:
+            logger.exception(e)
             raise PermissionCategoryAlreadyExists()
 
     async def create_permission(self, permission_data: CreatePermissionDto) -> PermissionDto:
+        logger.debug(f"Creating permission {permission_data=}")
         try:
             return await self._repository.create_permission(permission_data)
-        except IntegrityError:
+        except IntegrityError as e:
+            logger.exception(e)
             raise PermissionCategoryAlreadyExists()
 
     async def get_by_codes(self, codes: list[str]) -> list[PermissionDto]:
+        logger.debug(f"Fetching permissions by codes: {codes}")
         return await self._repository.get_by_codes(codes)

@@ -1,4 +1,8 @@
+import logging
+
 from redis.asyncio import Redis
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class SessionSet:
@@ -7,6 +11,7 @@ class SessionSet:
         self.redis_db = redis_db
 
     async def has_user_session(self, user_id: int, refresh_token: str) -> bool:
+        logger.debug(f"Check has user sessions: {user_id=}")
         sessions_key = self._get_user_sessions_key(user_id)
         return await self.redis_db.sismember(sessions_key, refresh_token)
 
@@ -14,6 +19,7 @@ class SessionSet:
         return f"sessions:{user_id}"
 
     async def create(self, user_id: int, refresh_token: str):
+        logger.debug(f"Creating session for user: {user_id=}")
         sessions_key = self._get_user_sessions_key(user_id)
         await self.redis_db.sadd(sessions_key, refresh_token)
 
