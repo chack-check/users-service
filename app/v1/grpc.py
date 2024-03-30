@@ -57,7 +57,7 @@ class Users(users_pb2_grpc.UsersServicer):
             )
             logger.debug(f"Fetched user by token: {db_user=}")
             if not db_user:
-                logger.warning(f"User not found for token")
+                logger.warning("User not found for token")
                 context.abort(grpc.StatusCode.NOT_FOUND, "User doesn't exist")
                 return
 
@@ -65,7 +65,7 @@ class Users(users_pb2_grpc.UsersServicer):
 
     @handle_doesnt_exist_user
     async def GetUserByRefreshToken(self, request, context):
-        logger.debug(f"Fetching user by refresh token")
+        logger.debug("Fetching user by refresh token")
         async with session() as s:
             users_set = UsersSet(s, redis_db)
             db_user = await users_set.get_from_refresh_token(
@@ -73,7 +73,7 @@ class Users(users_pb2_grpc.UsersServicer):
             )
             logger.debug(f"Fetched user by refresh token: {db_user=}")
             if not db_user:
-                logger.warning(f"User not found by refresh token")
+                logger.warning("User not found by refresh token")
                 context.abort(grpc.StatusCode.NOT_FOUND, "User doesn't exist")
                 return
 
@@ -81,7 +81,7 @@ class Users(users_pb2_grpc.UsersServicer):
 
 
 async def start_server():
-    logger.debug(f"Starting grpc server")
+    logger.debug("Starting grpc server")
     server = aio.server()
     users_pb2_grpc.add_UsersServicer_to_server(Users(), server)
     listen_addr = '[::]:9090'

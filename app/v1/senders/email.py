@@ -39,7 +39,7 @@ def send_email(from_: str, to: list[str],
     server = _get_smtp_server(settings.smtp_use_tls)
     with server as s:
         if settings.smtp_password and settings.smtp_user:
-            logger.debug(f"Logging in smtp server with username and password")
+            logger.debug("Logging in smtp server with username and password")
             s.login(settings.smtp_user, settings.smtp_password)
 
         msg = _generate_email_message(from_, to, subject, message)

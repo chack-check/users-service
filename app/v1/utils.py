@@ -46,7 +46,7 @@ def validate_auth_data(data: AuthData) -> None:
 def validate_user_required(user: DbUser | None) -> None:
     logger.debug(f"Validating user required {user=}")
     if not user:
-        logger.warning(f"Authentication validation invalid: auth required")
+        logger.warning("Authentication validation invalid: auth required")
         raise AuthRequired()
 
 

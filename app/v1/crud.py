@@ -171,7 +171,7 @@ class UsersQueries:
         clear_data = update_data.model_dump(exclude_none=True)
         logger.debug(f"Cleared update user data: {clear_data}")
         if not clear_data:
-            logger.debug(f"Cleared update user data is empty. Skip")
+            logger.debug("Cleared update user data is empty. Skip")
             return user
 
         stmt = update(User).returning(User).values(
@@ -184,7 +184,7 @@ class UsersQueries:
         clear_data = data.model_dump(exclude_none=True)
         logger.debug(f"Cleared patch user data: {clear_data}")
         if not clear_data:
-            logger.debug(f"Cleared patch user data is empty. Skip")
+            logger.debug("Cleared patch user data is empty. Skip")
             return user
 
         stmt = update(User).returning(User).values(
@@ -236,13 +236,13 @@ class UsersQueries:
     async def update_avatar(self, db_user: DbUser, new_avatar: SavingFileData | None = None) -> None:
         logger.debug(f"Updating user avatar {db_user=} {new_avatar=}")
         if not db_user.avatar and new_avatar:
-            logger.debug(f"User avatar is empty and new avatar is not empty. Creating new avatar for user")
+            logger.debug("User avatar is empty and new avatar is not empty. Creating new avatar for user")
             await self._save_user_avatar(db_user, new_avatar)
         elif new_avatar:
-            logger.debug(f"User avatar is not empty and new avatar is not empty. Updating user avatar")
+            logger.debug("User avatar is not empty and new avatar is not empty. Updating user avatar")
             await self._update_user_avatar(db_user, new_avatar)
         else:
-            logger.debug(f"New user avatar is empty. Clear user avatars")
+            logger.debug("New user avatar is empty. Clear user avatars")
             await self._clear_user_avatar(db_user)
 
     async def set_permissions(self, db_user: DbUser, new_permissions: list[PermissionDto]) -> DbUser:

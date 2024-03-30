@@ -41,13 +41,13 @@ class TokensSet:
         return jwt.encode(encode_data, settings.secret_key, ALGORITHM)
 
     def decode_token(self, token: str) -> int:
-        logger.debug(f"Decoding token")
+        logger.debug("Decoding token")
         try:
             payload = jwt.decode(token, settings.secret_key,
                                  algorithms=[ALGORITHM])
             logger.debug(f"Decoded token payload: {payload}")
             if not payload['exp'] > datetime.datetime.now(datetime.timezone.utc).timestamp():
-                logger.warning(f"Token expired")
+                logger.warning("Token expired")
                 raise IncorrectToken
 
             decoded_sub = json.loads(payload['sub'])

@@ -20,7 +20,7 @@ class PermissionRepository:
         self._session = session
 
     async def get_all(self) -> list[PermissionDto]:
-        logger.debug(f"Fetching all permissions")
+        logger.debug("Fetching all permissions")
         stmt = select(Permission)
         result = await self._session.execute(stmt)
         result_list = result.scalars()

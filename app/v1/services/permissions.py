@@ -20,7 +20,7 @@ class PermissionService:
         self._repository = repository
 
     async def get_all(self) -> list[PermissionDto]:
-        logger.debug(f"Getting all permissions")
+        logger.debug("Getting all permissions")
         return await self._repository.get_all()
 
     async def create_category(self, category_data: CreatePermissionCategoryDto) -> PermissionCategoryDto:
