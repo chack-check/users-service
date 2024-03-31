@@ -1,4 +1,4 @@
-name: CI/CD Generic jobs
+name: CI/CD Development
 
 on:
   push:
