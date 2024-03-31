@@ -5,9 +5,7 @@ on:
     branches: [ "feat/*", "feature/*", "fix/*", "dev", "development" ]
 
 jobs:
-  lint:
-    uses: chack-check/diffaction-workflows/.github/workflows/lint.yml@main
+  development:
+    uses: chack-check/diffaction-workflows/.github/workflows/python-development.yml@main
     with:
       service-name: diffaction-users-service
-  test:
-    uses: chack-check/diffaction-workflows/.github/workflows/python-tests.yml@main
