@@ -6,7 +6,7 @@ on:
 
 jobs:
   staging:
-    uses: chack-check/diffaction-workflows/.github/workflows/python-staging.yml@main
+    uses: chack-check/diffaction-workflows/.github/workflows/staging.yml@main
     with:
       service-name: diffaction-users-service
       app-dependencies-manifests: |
@@ -21,7 +21,9 @@ jobs:
         kubernetes/stage/app/deployment.yml
         kubernetes/stage/app/service.yml
         kubernetes/stage/app/ingress.yml
+      run-tests-command: poetry run pytest
     secrets:
       KUBERNETES_SECRET: ${{ secrets.KUBERNETES_SECRET }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      CLIENT_SERVICE_PAT: ${{ secrets.CLIENT_SERVICE_PAT }}
