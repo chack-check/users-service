@@ -6,6 +6,7 @@ on:
 
 jobs:
   development:
-    uses: chack-check/diffaction-workflows/.github/workflows/python-development.yml@main
+    uses: chack-check/diffaction-workflows/.github/workflows/development.yml@main
     with:
       service-name: diffaction-users-service
+      run-tests-command: poetry run pytest
