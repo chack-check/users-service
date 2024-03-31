@@ -12,4 +12,9 @@ COPY pyproject.toml poetry.lock /src/
 
 RUN poetry install --no-interaction --no-ansi
 
+COPY alembic.ini /src/
 COPY app/ /src/app
+COPY alembic/ /src/alembic
+COPY templates/ /src/templates
+
+ENTRYPOINT [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000" ]

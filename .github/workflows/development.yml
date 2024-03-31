@@ -1,0 +1,11 @@
+name: CI/CD Development
+
+on:
+  push:
+    branches: [ "feat/*", "feature/*", "fix/*", "dev", "development" ]
+
+jobs:
+  development:
+    uses: chack-check/diffaction-workflows/.github/workflows/python-development.yml@main
+    with:
+      service-name: diffaction-users-service

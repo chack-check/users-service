@@ -16,4 +16,4 @@ COPY app/ /src/app
 
 ENV MYPATH=/src/app/
 
-ENTRYPOINT [ "/bin/sh", "-c", "flake8 ." ]
+ENTRYPOINT [ "/bin/sh", "-c", "flake8 --ignore=E501 . --exclude=protobuf" ]

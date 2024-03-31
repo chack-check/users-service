@@ -1,35 +1,64 @@
 version: '3'
 
 services:
-  db:
+  users-db:
     image: postgres
     env_file:
       - .env.dev
+    networks:
+      - chack-check-network
     volumes:
       - pgdata:/var/lib/postgresql/data
-  redis:
+  users-redis:
     image: redis
-  mailhog:
+    networks:
+      - chack-check-network
+  users-mailhog:
     image: mailhog/mailhog
     ports:
       - 1025:1025
       - 8025:8025
-  app:
+    networks:
+      - chack-check-network
+  users-migrations:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    volumes:
+      - ./app:/src/app
+      - ./alembic:/src/alembic
+    command: poetry run alembic upgrade head
+    networks:
+      - chack-check-network
+    env_file:
+      - .env.dev
+    depends_on:
+      - users-db
+  users-service:
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
     volumes:
       - ./app:/src/app
       - ./templates:/src/templates
-    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - ./alembic:/src/alembic
+    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
     env_file:
       - .env.dev
     ports:
       - 8000:8000
+      - 9090:9090
     depends_on:
-      - db
-      - redis
-      - mailhog
+      - users-db
+      - users-redis
+      - users-mailhog
+    networks:
+      - chack-check-network
+
+networks:
+  chack-check-network:
+    name: chack-check-network
+    external: true
 
 volumes:
   pgdata:

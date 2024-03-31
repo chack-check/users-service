@@ -7,3 +7,5 @@ run_tests:
 lint:
 	docker build -t chack-check-users-lint -f docker/Dockerfile.lint .
 	docker run --rm chack-check-users-lint
+migrations:
+	docker compose -f docker-compose.dev.yml run --build --rm users-service poetry run alembic revision --autogenerate -m "$(name)"

@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chack-users-service-ingress
+  labels:
+    app: chack-users-service
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+      - stage.diffaction.com
+    secretName: letsencrypt
+  rules:
+  - host: stage.diffaction.com
+    http:
+      paths:
+      - path: /api/v1/users
+        pathType: Prefix
+        backend:
+          service:
+            name: chack-users-service
+            port:
+              number: 8000
