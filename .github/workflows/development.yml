@@ -1,0 +1,13 @@
+name: CI/CD Generic jobs
+
+on:
+  push:
+    branches: [ "feat/*", "feature/*", "fix/*", "dev", "development" ]
+
+jobs:
+  lint:
+    uses: chack-check/diffaction-workflows/.github/workflows/lint.yml@main
+    with:
+      service-name: diffaction-users-service
+  test:
+    uses: chack-check/diffaction-workflows/.github/workflows/python-tests.yml@main

@@ -1,0 +1,53 @@
+name: CI/CD Stage
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  lint:
+    uses: chack-check/diffaction-workflows/.github/workflows/lint.yml@main
+    with:
+      service-name: diffaction-users-service
+  test:
+    uses: chack-check/diffaction-workflows/.github/workflows/python-tests.yml@main
+  build:
+    needs: [ test, lint ]
+    uses: chack-check/diffaction-workflows/.github/workflows/build.yml@main
+    with:
+      service-name: diffaction-users-service
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ DOCKERHUB_TOKEN }}
+  deploy:
+    needs: [ test, lint, build ]
+    uses: chack-check/diffaction-workflows/.github/workflows/build.yml@main
+    with:
+      service-name: diffaction-users-service
+      app-dependencies-manifests: |
+        kubernetes/stage/db/deployment.yml
+        kubernetes/stage/db/service.yml
+        kubernetes/stage/redis/deployment.yml
+        kubernetes/stage/redis/service.yml
+        kubernetes/stage/mailhog/deployment.yml
+        kubernetes/stage/mailhog/service.yml
+        kubernetes/stage/mailhog/ingress.yml
+      app-manifests: |
+        kubernetes/stage/app/deployment.yml
+        kubernetes/stage/app/service.yml
+        kubernetes/stage/app/ingress.yml
+    secrets:
+      KUBERNETES_SECRET: ${{ secrets.KUBERNETES_SECRET }}
+      DOCKERHUB_USERNAME: ${{ DOCKERHUB_USERNAME }}
+            
+  update-mesh:
+    needs: [ test, lint, build ]
+    steps:
+      - name: Refresh graphql-mesh front-end service
+        run: |
+          curl \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: token ${{ secrets.CLIENT_SERVICE_PAT }}" \
+          --data '{"ref": "main"}' \
+          https://api.github.com/repos/chack-check/client-diffaction-service/actions/workflows/cicd-stage.yml/dispatches
