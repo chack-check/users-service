@@ -17,7 +17,7 @@ spec:
     spec:
       initContainers:
         - name: migrate-users-service
-          image: artemowkin/chack-users-service:latest
+          image: artemowkin/diffaction-users-service:latest
           command: ["alembic", "upgrade", "head"]
           env:
             - name: USERS_SERVICE_DATABASE_URL
