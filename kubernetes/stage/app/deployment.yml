@@ -81,7 +81,7 @@ spec:
               value: https://stage.diffaction.com/api/v1/avatar
       containers:
         - name: chack-users-service
-          image: artemowkin/chack-users-service:latest
+          image: artemowkin/diffaction-users-service:latest
           ports:
             - containerPort: 8000
               name: web
