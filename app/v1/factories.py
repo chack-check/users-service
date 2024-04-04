@@ -55,7 +55,9 @@ class PermissionFactory:
     @staticmethod
     def schema_from_dto(permission: PermissionDto) -> Permission:
         permission_schema = Permission(**permission.model_dump(exclude={"category", "id"}))
-        permission_schema.category = PermissionCategoryFactory.schema_from_dto(permission.category) if permission.category else None
+        permission_schema.category = (
+            PermissionCategoryFactory.schema_from_dto(permission.category) if permission.category else None
+        )
         return permission_schema
 
 
@@ -88,17 +90,26 @@ class UserFactory:
             email_confirmed=user.email_confirmed,
             phone_confirmed=user.phone_confirmed,
             last_seen=user.last_seen.isoformat(),
-            original_avatar_url=user.avatar.original_url if user.avatar and user.avatar.original_url else get_default_avatar_url(user.username),
+            original_avatar_url=(
+                user.avatar.original_url
+                if user.avatar and user.avatar.original_url
+                else get_default_avatar_url(user.username)
+            ),
             converted_avatar_url=user.avatar.converted_url if user.avatar and user.avatar.converted_url else None,
         )
 
     @staticmethod
     def event_from_dto(user: DbUser, event_type: str, included_users: list[int] | None = None) -> UserEvent:
-        user.avatar = SavedFile(original_url=get_default_avatar_url(user.username), original_filename=f"{user.username}.svg")
+        user_copy = user.model_copy(deep=True)
+        if not user_copy.avatar:
+            user_copy.avatar = SavedFile(
+                original_url=get_default_avatar_url(user_copy.username), original_filename=f"{user_copy.username}.svg"
+            )
+
         return UserEvent(
             event_type=event_type,
             included_users=included_users if included_users else [],
-            data=user.model_dump_json(exclude={"password"}),
+            data=user_copy.model_dump_json(exclude={"password"}),
         )
 
 
@@ -113,12 +124,16 @@ class FileFactory:
                 signature=file.original_file.signature,
                 system_filetype=SavingFileSystemFiletypes(file.original_file.system_filetype.value),
             ),
-            converted_file=SavingFileObject(
-                filename=file.converted_file.filename,
-                url=file.converted_file.url,
-                signature=file.converted_file.signature,
-                system_filetype=SavingFileSystemFiletypes(file.converted_file.system_filetype.value),
-            ) if file.converted_file else None,
+            converted_file=(
+                SavingFileObject(
+                    filename=file.converted_file.filename,
+                    url=file.converted_file.url,
+                    signature=file.converted_file.signature,
+                    system_filetype=SavingFileSystemFiletypes(file.converted_file.system_filetype.value),
+                )
+                if file.converted_file
+                else None
+            ),
         )
 
 
