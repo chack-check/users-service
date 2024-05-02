@@ -1,0 +1,13 @@
+from domain.exceptions import BaseDomainException
+
+
+class BaseSessionException(BaseDomainException): ...
+
+
+class IncorrectTokenException(BaseSessionException): ...
+
+
+class NoSessionsToRefreshException(BaseSessionException): ...
+
+
+class IncorrectAuthData(BaseSessionException): ...

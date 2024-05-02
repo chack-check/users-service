@@ -1,0 +1,13 @@
+from infrastructure.exceptions import BaseInfrastructureException
+
+
+class BaseRedisException(BaseInfrastructureException): ...
+
+
+class VerificationAttemptsExpired(BaseRedisException): ...
+
+
+class IncorrectVerificationCode(BaseRedisException): ...
+
+
+class IncorrectAuthenticationSession(BaseRedisException): ...
