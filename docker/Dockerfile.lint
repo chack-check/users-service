@@ -12,8 +12,8 @@ COPY pyproject.toml poetry.lock /src/
 
 RUN poetry install --with lint --no-interaction --no-ansi
 
-COPY app/ /src/app
+COPY src/ /src/
 
-ENV MYPATH=/src/app/
+ENV MYPATH=/src/
 
 ENTRYPOINT [ "/bin/sh", "-c", "flake8 --ignore=E501 . --exclude=protobuf" ]
