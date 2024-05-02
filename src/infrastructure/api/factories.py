@@ -42,10 +42,8 @@ class UploadingFileApiFactory:
     @staticmethod
     def domain_from_request(file: UploadFileData) -> UploadingFileDomain:
         return UploadingFileDomain(
-            original=UploadingFileMetaApiFactory.domain_from_request(file.original_file),
-            converted=(
-                UploadingFileMetaApiFactory.domain_from_request(file.converted_file) if file.converted_file else None
-            ),
+            original=UploadingFileMetaApiFactory.domain_from_request(file.original),
+            converted=(UploadingFileMetaApiFactory.domain_from_request(file.converted) if file.converted else None),
         )
 
 
