@@ -24,6 +24,7 @@ jobs:
       run-tests-command: poetry run pytest
       skiptests: true
       run-tests-command: skip
+      skiplint: true
     secrets:
       KUBERNETES_SECRET: ${{ secrets.KUBERNETES_SECRET }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

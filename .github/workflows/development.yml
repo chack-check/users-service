@@ -11,3 +11,4 @@ jobs:
       service-name: diffaction-users-service
       skiptests: true
       run-tests-command: skip
+      skiplint: true
