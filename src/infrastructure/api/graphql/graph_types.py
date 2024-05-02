@@ -65,8 +65,8 @@ class UploadFileObject:
 
 @strawberry.input
 class UploadFileData:
-    original_file: UploadFileObject
-    converted_file: UploadFileObject | None = None
+    original: UploadFileObject
+    converted: UploadFileObject | None = None
 
 
 @strawberry.type
