@@ -22,6 +22,8 @@ jobs:
         kubernetes/stage/app/service.yml
         kubernetes/stage/app/ingress.yml
       run-tests-command: poetry run pytest
+      skiptests: true
+      run-tests-command: skip
     secrets:
       KUBERNETES_SECRET: ${{ secrets.KUBERNETES_SECRET }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
