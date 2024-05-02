@@ -25,9 +25,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.dev
     volumes:
-      - ./app:/src/app
-      - ./alembic:/src/alembic
-    command: poetry run alembic upgrade head
+      - ./src/:/src/
+    command: alembic upgrade head
     networks:
       - chack-check-network
     env_file:
@@ -39,10 +38,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.dev
     volumes:
-      - ./app:/src/app
-      - ./templates:/src/templates
-      - ./alembic:/src/alembic
-    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+      -  ./src/:/src/
+    command: uvicorn infrastructure.api.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
     env_file:
       - .env.dev
     ports:
