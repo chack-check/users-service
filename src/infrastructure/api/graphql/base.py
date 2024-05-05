@@ -53,7 +53,7 @@ from infrastructure.memory_storage.exceptions import (
     IncorrectAuthenticationSession,
     IncorrectVerificationCode,
 )
-from infrastructure.senders.email import EmailSender
+from infrastructure.senders.email import EmailSender, LoggingEmailSender
 
 from ..dependencies import CustomContext
 from .graph_types import (
@@ -79,9 +79,6 @@ from .graph_types import (
 CustomInfo: TypeAlias = Info[CustomContext, None]
 
 logger = logging.getLogger("uvicorn.error")
-
-
-# TODO: Обработка ошибок
 
 
 @strawberry.type
@@ -180,7 +177,7 @@ class Mutation:
 
         try:
             async with db_session() as s:
-                sender = EmailSender()
+                sender = LoggingEmailSender(EmailSender())
                 send_verification_code_handler = use_send_verification_code_handler(
                     sender, use_users_adapter(s), use_codes_storage_adapter()
                 )
