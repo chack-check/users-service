@@ -152,6 +152,9 @@ spec:
                   name: users-service-credentials
                   key: smtp_password
 
+            - name: USERS_SERVICE_SMTP_USE_TLS
+              value: "1"
+
             - name: USERS_SERVICE_PUBLISHER_RABBIT_EXCHANGE_NAME
               value: stage_users_exchange
 
