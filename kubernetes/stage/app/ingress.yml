@@ -1,17 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: chack-users-service-ingress
+  name: diffaction-users-service-ingress
   labels:
-    app: chack-users-service
+    app: diffaction-users-service
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt"
+    cert-manager.io/issuer: "letsencrypt-production"
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
       - stage.diffaction.com
-    secretName: letsencrypt
+    secretName: users-tls
   rules:
   - host: stage.diffaction.com
     http:
@@ -20,6 +20,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: chack-users-service
+            name: diffaction-users-service
             port:
               number: 8000
