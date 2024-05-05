@@ -1,3 +1,4 @@
+import logging
 import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
@@ -5,6 +6,8 @@ from email.mime.text import MIMEText
 
 from domain.notifications.ports import NotificationSenderPort
 from infrastructure.settings import settings, templates_loader
+
+logger = logging.getLogger("uvicorn.error")
 
 
 def _generate_email_message(from_: str, to: list[str], subject: str, message: str) -> MIMEMultipart:
@@ -33,6 +36,20 @@ def send_email(from_: str, to: list[str], subject: str, message: str) -> None:
 
         msg = _generate_email_message(from_, to, subject, message)
         s.sendmail(from_, to, msg.as_string())
+
+
+class LoggingEmailSender(NotificationSenderPort):
+
+    def __init__(self, adapter: NotificationSenderPort):
+        self._adapter = adapter
+
+    async def send_code(self, identifier: str, code: str) -> None:
+        logger.debug(f"Sending code message to email: {identifier=} {code=}")
+        try:
+            await self._adapter.send_code(identifier, code)
+        except Exception as e:
+            logger.exception(e)
+            raise
 
 
 class EmailSender(NotificationSenderPort):
