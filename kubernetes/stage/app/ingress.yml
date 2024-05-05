@@ -5,7 +5,7 @@ metadata:
   labels:
     app: diffaction-users-service
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-production"
+    cert-manager.io/issuer: "letsencrypt-production"
 spec:
   ingressClassName: nginx
   tls:
