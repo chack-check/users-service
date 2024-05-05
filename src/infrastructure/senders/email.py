@@ -44,7 +44,10 @@ class LoggingEmailSender(NotificationSenderPort):
         self._adapter = adapter
 
     async def send_code(self, identifier: str, code: str) -> None:
-        logger.debug(f"Sending code message to email: {identifier=} {code=}")
+        logger.debug(f"sending code message to email: {identifier=} {code=}")
+        logger.debug(
+            f"email smtp from: {settings.smtp_from}, smtp_host: {settings.smtp_host}, smtp_port: {settings.smtp_port}, smtp_tls: {settings.smtp_use_tls}"
+        )
         try:
             await self._adapter.send_code(identifier, code)
         except Exception as e:
