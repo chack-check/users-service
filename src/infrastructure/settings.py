@@ -25,7 +25,6 @@ class Settings(BaseSettings):
     verification_exp_seconds: int = 10 * 60  # 10 minutes
     verification_attempts_count: int = 7
     auth_session_exp_seconds: int = 10 * 60
-    files_service_url: str
     publisher_rabbit_host: str
     publisher_rabbit_exchange_name: str
     files_signature_secret: str
