@@ -124,6 +124,8 @@ class AuthenticateHandler:
         user = User(
             id_=0,
             username=auth_data.get_username(),
+            email=auth_data.get_email(),
+            phone=auth_data.get_phone(),
             password=auth_data.get_password_hash(),
             first_name=auth_data.get_first_name(),
             last_name=auth_data.get_last_name(),
