@@ -39,7 +39,7 @@ def handle_exception(exception: Type[Exception], status_code: grpc.StatusCode, d
     return decorator
 
 
-class Users(users_pb2_grpc.UsersServicer):
+class Users:
 
     @handle_exception(exception=Exception, status_code=grpc.StatusCode.INTERNAL, details="Internal server error")
     @handle_exception(
