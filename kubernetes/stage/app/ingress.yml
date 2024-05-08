@@ -11,7 +11,7 @@ spec:
   tls:
   - hosts:
       - stage.diffaction.com
-    secretName: users-tls
+    secretName: diffaction-tls
   rules:
   - host: stage.diffaction.com
     http:
