@@ -4,12 +4,14 @@ from logging import getLogger
 from urllib.parse import urljoin
 
 from sqlalchemy import Select, delete, insert, or_, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.dml import ReturningUpdate
 
 from domain.files.models import SavedFile, UploadingFile, UploadingFileMeta
 from domain.files.ports import FilesPort
 from domain.permissions.models import Permission
+from domain.users.exceptions import UserAlreadyExists
 from domain.users.models import User
 from domain.users.ports import UsersPort
 from infrastructure.database.exceptions import IncorrectFileSignature
@@ -195,7 +197,11 @@ class UsersAdapter(UsersPort):
         else:
             stmt = insert(UserModel).returning(UserModel.id).values(stmt_data)
 
-        result = await self._session.execute(stmt)
+        try:
+            result = await self._session.execute(stmt)
+        except IntegrityError:
+            raise UserAlreadyExists(f"user with these credentials already exists")
+
         saved_user_id = result.scalar_one()
         return saved_user_id
 
