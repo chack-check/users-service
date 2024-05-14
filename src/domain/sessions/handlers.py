@@ -135,11 +135,7 @@ class AuthenticateHandler:
             last_seen=datetime.now(),
             avatar=saved_avatar,
         )
-        try:
-            saved_user = await self._users_port.save(user)
-        except IntegrityError:
-            raise UserAlreadyExists("user with these credentials already exists")
-
+        saved_user = await self._users_port.save(user)
         access_token = self._tokens_port.create_token(saved_user, "access")
         refresh_token = self._tokens_port.create_token(saved_user, "refresh")
         session = Session(refresh_token, user)
