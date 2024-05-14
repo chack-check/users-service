@@ -9,7 +9,10 @@ from domain.sessions.handlers import (
     AuthenticateHandler,
     GenerateAuthSessionHandler,
     LoginHandler,
+    LogoutAllHandler,
+    LogoutHandler,
     RefreshSessionHandler,
+    ValidateTokenHandler,
 )
 from domain.sessions.ports import SessionsStoragePort, TokensPort
 from domain.users.handlers import (
@@ -94,6 +97,26 @@ def use_login_handler(
     tokens_port: TokensPort,
 ) -> LoginHandler:
     return LoginHandler(sessions_storage_port, tokens_port, users_port)
+
+
+def use_logout_handler(
+    sessions_storage_port: SessionsStoragePort,
+    tokens_port: TokensPort,
+    users_port: UsersPort,
+) -> LogoutHandler:
+    return LogoutHandler(sessions_storage_port, tokens_port, users_port)
+
+
+def use_logout_all_handler(
+    sessions_storage_port: SessionsStoragePort,
+    tokens_port: TokensPort,
+    users_port: UsersPort,
+) -> LogoutAllHandler:
+    return LogoutAllHandler(sessions_storage_port, tokens_port, users_port)
+
+
+def use_validate_token_handler(tokens_port: TokensPort) -> ValidateTokenHandler:
+    return ValidateTokenHandler(tokens_port)
 
 
 def use_authenticate_handler(

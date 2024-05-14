@@ -155,3 +155,52 @@ class GenerateAuthSessionHandler:
     async def execute(self, email_or_phone: str, operation: AuthSessionOperations) -> AuthenticationSession:
         session = await self._sessions_storage_port.generate_auth_session(email_or_phone, operation)
         return session
+
+
+class LogoutHandler:
+
+    def __init__(self, sessions_storage_port: SessionsStoragePort, tokens_port: TokensPort, users_port: UsersPort):
+        self._sessions_storage_port = sessions_storage_port
+        self._tokens_port = tokens_port
+        self._users_port = users_port
+
+    async def execute(self, token: str) -> None:
+        user_id = await self._tokens_port.decode_token(token)
+        if user_id == 0:
+            raise IncorrectTokenException("Incorrect token")
+
+        user = await self._users_port.get_by_id(user_id)
+        if not user:
+            raise IncorrectTokenException("Incorrect token")
+
+        session = Session(token, user)
+        await self._sessions_storage_port.delete(session)
+
+
+class LogoutAllHandler:
+
+    def __init__(self, sessions_storage_port: SessionsStoragePort, tokens_port: TokensPort, users_port: UsersPort):
+        self._sessions_storage_port = sessions_storage_port
+        self._tokens_port = tokens_port
+        self._users_port = users_port
+
+    async def execute(self, token: str) -> None:
+        user_id = await self._tokens_port.decode_token(token)
+        if user_id == 0:
+            raise IncorrectTokenException("Incorrect token")
+
+        user = await self._users_port.get_by_id(user_id)
+        if not user:
+            raise IncorrectTokenException("Incorrect token")
+
+        await self._sessions_storage_port.delete_all(user)
+
+
+class ValidateTokenHandler:
+
+    def __init__(self, tokens_port: TokensPort):
+        self._tokens_port = tokens_port
+
+    async def execute(self, token: str) -> bool:
+        user_id = await self._tokens_port.decode_token(token)
+        return user_id != 0

@@ -40,6 +40,11 @@ class SystemFiletypes(Enum):
 
 
 @strawberry.type
+class BooleanResponse:
+    result: bool
+
+
+@strawberry.type
 class FieldError:
     field: str
     errors: list[str]
