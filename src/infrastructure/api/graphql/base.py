@@ -2,6 +2,7 @@ import logging
 from typing import TypeAlias
 
 import strawberry
+from sqlalchemy import Boolean
 from strawberry.types import Info
 
 from domain.sessions.exceptions import (
@@ -35,6 +36,8 @@ from infrastructure.dependencies import (
     use_get_user_handler,
     use_get_users_by_ids_handler,
     use_login_handler,
+    use_logout_all_handler,
+    use_logout_handler,
     use_refresh_handler,
     use_reset_password_handler,
     use_send_verification_code_handler,
@@ -47,6 +50,7 @@ from infrastructure.dependencies import (
     use_update_phone_handler,
     use_user_events_adapter,
     use_users_adapter,
+    use_validate_token_handler,
     use_verify_code_handler,
 )
 from infrastructure.memory_storage.exceptions import (
@@ -60,6 +64,7 @@ from .graph_types import (
     AuthData,
     AuthSessionOperations,
     AuthSessionResponse,
+    BooleanResponse,
     ChangeEmailData,
     ChangePasswordData,
     ChangePhoneData,
@@ -405,5 +410,49 @@ class Mutation:
             return ErrorResponse(message="User with this email or phone not found")
         except IncorrectAuthenticationSession:
             return ErrorResponse(message="Invalid authentication session")
+        except Exception:
+            return ErrorResponse(message="Internal server error")
+
+    @strawberry.mutation
+    async def logout(self, info: CustomInfo) -> BooleanResponse | ErrorResponse:
+        if not info.context.token:
+            return ErrorResponse(message="Token required")
+
+        try:
+            async with db_session() as s:
+                handler = use_logout_handler(use_sessions_storage_adapter(), use_tokens_adapter(), use_users_adapter(s))
+                await handler.execute(info.context.token)
+                return BooleanResponse(result=True)
+        except IncorrectTokenException:
+            return ErrorResponse(message="Incorrect token")
+        except Exception:
+            return ErrorResponse(message="Internal server error")
+
+    @strawberry.mutation
+    async def logout_all(self, info: CustomInfo) -> BooleanResponse | ErrorResponse:
+        if not info.context.token:
+            return ErrorResponse(message="Token required")
+
+        try:
+            async with db_session() as s:
+                handler = use_logout_all_handler(
+                    use_sessions_storage_adapter(), use_tokens_adapter(), use_users_adapter(s)
+                )
+                await handler.execute(info.context.token)
+                return BooleanResponse(result=True)
+        except IncorrectTokenException:
+            return ErrorResponse(message="Incorrect token")
+        except Exception:
+            return ErrorResponse(message="Internal server error")
+
+    @strawberry.mutation
+    async def validate_token(self, info: CustomInfo) -> BooleanResponse | ErrorResponse:
+        if not info.context.token:
+            return ErrorResponse(message="Token required")
+
+        try:
+            handler = use_validate_token_handler(use_tokens_adapter())
+            is_token_valid = await handler.execute(info.context.token)
+            return BooleanResponse(result=is_token_valid)
         except Exception:
             return ErrorResponse(message="Internal server error")
