@@ -15,7 +15,7 @@ class UserEventFactory:
         if avatar := user.get_avatar():
             event_user_avatar = EventSavedFile(
                 original_url=avatar.get_original_url(),
-                origilan_filename=avatar.get_original_filename(),
+                original_filename=avatar.get_original_filename(),
                 converted_url=avatar.get_converted_url(),
                 converted_filename=avatar.get_converted_filename(),
             )
