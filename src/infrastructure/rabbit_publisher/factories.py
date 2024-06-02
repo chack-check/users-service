@@ -14,10 +14,10 @@ class UserEventFactory:
     def event_from_model(user: User, event_type: str) -> SystemEvent:
         if avatar := user.get_avatar():
             event_user_avatar = EventSavedFile(
-                original_url=avatar.get_original_url(),
-                original_filename=avatar.get_original_filename(),
-                converted_url=avatar.get_converted_url(),
-                converted_filename=avatar.get_converted_filename(),
+                originalUrl=avatar.get_original_url(),
+                originalFilename=avatar.get_original_filename(),
+                convertedUrl=avatar.get_converted_url(),
+                convertedFilename=avatar.get_converted_filename(),
             )
         else:
             event_user_avatar = None

@@ -10,10 +10,10 @@ class SystemEvent(BaseModel):
 
 
 class EventSavedFile(BaseModel):
-    original_url: str
-    original_filename: str
-    converted_url: str | None = None
-    converted_filename: str | None = None
+    originalUrl: str
+    originalFilename: str
+    convertedUrl: str | None = None
+    convertedFilename: str | None = None
 
 
 class EventPermissionCategory(BaseModel):
