@@ -40,6 +40,7 @@ from infrastructure.dependencies import (
     use_logout_handler,
     use_refresh_handler,
     use_reset_password_handler,
+    use_search_users_handler,
     use_send_verification_code_handler,
     use_sessions_storage_adapter,
     use_tokens_adapter,
@@ -72,6 +73,7 @@ from .graph_types import (
     FieldError,
     FieldErrorsResponse,
     LoginData,
+    PaginatedUsersResponse,
     Tokens,
     UpdateData,
     UploadFileData,
@@ -146,6 +148,30 @@ class Query:
                 users = await get_users_by_ids_handler.execute(ids)
                 await s.commit()
                 return UsersArrayResponse(users=[UserApiFactory.response_from_domain(user) for user in users])
+        except IncorrectTokenException:
+            return ErrorResponse(message="Incorrect token")
+        except Exception:
+            return ErrorResponse(message="Internal server error")
+
+    @strawberry.field
+    async def search_users(
+        self, info: CustomInfo, query: str, page: int = 1, per_page: int = 100
+    ) -> PaginatedUsersResponse | ErrorResponse:
+        if not info.context.token:
+            return ErrorResponse(message="Token required")
+
+        try:
+            async with db_session() as s:
+                handler = use_search_users_handler(use_users_adapter(s), use_tokens_adapter())
+                paginated_users = await handler.execute(query, page, per_page, info.context.token)
+                return PaginatedUsersResponse(
+                    page=paginated_users.get_page(),
+                    num_pages=paginated_users.get_pages_count(),
+                    per_page=paginated_users.get_per_page(),
+                    data=[UserApiFactory.response_from_domain(u) for u in paginated_users.get_data()],
+                )
+        except IncorrectTokenException:
+            return ErrorResponse(message="Incorrect token")
         except Exception:
             return ErrorResponse(message="Internal server error")
 

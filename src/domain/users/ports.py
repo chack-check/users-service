@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from domain.general.models import PaginatedResponse
+
 from .models import User
 
 
@@ -25,6 +27,9 @@ class UsersPort(ABC):
 
     @abstractmethod
     async def get_by_phone(self, phone: str) -> User | None: ...
+
+    @abstractmethod
+    async def search_users(self, query: str, page: int = 1, per_page: int = 100) -> PaginatedResponse[User]: ...
 
     @abstractmethod
     async def save(self, user: User) -> User: ...
