@@ -2,6 +2,7 @@ from typing import Literal
 
 from domain.files.models import SavedFile, UploadingFile
 from domain.files.ports import FilesPort
+from domain.general.models import PaginatedResponse
 from domain.sessions.exceptions import IncorrectTokenException
 from domain.sessions.models import AuthSessionOperations, Session, TokenPairData
 from domain.sessions.ports import SessionsStoragePort, TokensPort
@@ -350,3 +351,22 @@ class ResetPasswordHandler:
         refresh_token = self._tokens_port.create_token(user, "refresh")
         access_token = self._tokens_port.create_token(user, "access")
         return TokenPairData(refresh_token, access_token, saved_user)
+
+
+class SearchUsersHandler:
+
+    def __init__(self, users_port: UsersPort, tokens_port: TokensPort):
+        self._users_port = users_port
+        self._tokens_port = tokens_port
+
+    async def execute(self, query: str, page: int, per_page: int, token: str) -> PaginatedResponse[User]:
+        user_id = await self._tokens_port.decode_token(token)
+        if not user_id:
+            raise IncorrectTokenException("incorrect token")
+
+        user = await self._users_port.get_by_id(user_id)
+        if not user:
+            raise IncorrectTokenException("incorrect token")
+
+        users = await self._users_port.search_users(query, page, per_page)
+        return users

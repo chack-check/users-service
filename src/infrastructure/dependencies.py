@@ -21,6 +21,7 @@ from domain.users.handlers import (
     GetUserHandler,
     GetUsersByIdsHandler,
     ResetPasswordHandler,
+    SearchUsersHandler,
     UpdateAvatarHandler,
     UpdateEmailHandler,
     UpdatePasswordHandler,
@@ -234,3 +235,13 @@ def use_generate_auth_session_handler(
     sessions_storage_port: SessionsStoragePort,
 ) -> GenerateAuthSessionHandler:
     return GenerateAuthSessionHandler(sessions_storage_port)
+
+
+def use_search_users_handler(
+    users_port: UsersPort,
+    tokens_port: TokensPort,
+) -> SearchUsersHandler:
+    return SearchUsersHandler(
+        users_port,
+        tokens_port,
+    )
