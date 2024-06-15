@@ -267,6 +267,8 @@ class Mutation:
             return ErrorResponse(message="User with these credentials already exists")
         except IncorrectFileSignature:
             return FieldErrorsResponse(errors=[FieldError(field="avatar", errors=["Incorrect file signature"])])
+        except IncorrectAuthenticationSession:
+            return FieldErrorsResponse(errors=[FieldError(field="session", errors=["Incorrect session"])])
         except Exception:
             return ErrorResponse(message="Internal server error")
 
