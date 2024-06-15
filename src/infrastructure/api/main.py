@@ -18,7 +18,7 @@ logger = logging.getLogger("uvicorn.error")
 
 logger.debug(f"Initing sentry for dsn: {settings.sentry_link}. Environment: {settings.run_mode}")
 if settings.sentry_link:
-    sentry_sdk.init(settings.sentry_link, environment=settings.run_mode)
+    sentry_sdk.init(settings.sentry_link, environment=settings.run_mode, enable_tracing=True)
 
 schema_v1 = strawberry.Schema(Query, Mutation)
 
