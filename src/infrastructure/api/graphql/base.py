@@ -57,6 +57,7 @@ from infrastructure.dependencies import (
 from infrastructure.memory_storage.exceptions import (
     IncorrectAuthenticationSession,
     IncorrectVerificationCode,
+    VerificationAttemptsExpired,
 )
 from infrastructure.senders.email import EmailSender, LoggingEmailSender
 
@@ -237,6 +238,8 @@ class Mutation:
             return AuthenticationSessionApiFactory.response_from_domain(auth_session)
         except IncorrectVerificationCode:
             return FieldErrorsResponse(errors=[FieldError(field="code", errors=["Incorrect verification code"])])
+        except VerificationAttemptsExpired:
+            return ErrorResponse(message="Verification attempts expired")
         except Exception:
             return ErrorResponse(message="Internal server error")
 
