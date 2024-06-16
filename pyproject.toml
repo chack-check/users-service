@@ -37,6 +37,7 @@ pytest-asyncio = "^0.21.1"
 
 [tool.poetry.group.lint.dependencies]
 flake8 = "^6.0.0"
+pyright = "^1.1.367"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -48,3 +49,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.pyright]
+exclude = ["**/grpc_server", "**/migrations"]

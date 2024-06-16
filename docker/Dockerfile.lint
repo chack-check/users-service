@@ -16,4 +16,4 @@ COPY src/ /src/
 
 ENV MYPATH=/src/
 
-ENTRYPOINT [ "/bin/sh", "-c", "flake8 --ignore=E501 . --exclude=protobuf" ]
+ENTRYPOINT [ "/bin/sh", "-c", "poetry run pyright ." ]
