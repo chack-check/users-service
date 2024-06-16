@@ -20,3 +20,8 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       CLIENT_SERVICE_PAT: ${{ secrets.CLIENT_SERVICE_PAT }}
+      TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      MAIL_HOST: ${{ secrets.MAIL_HOST }}
+      MAIL_LOGIN: ${{ secrets.MAIL_LOGIN }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
