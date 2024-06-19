@@ -163,7 +163,7 @@ class Query:
 
         try:
             async with db_session() as s:
-                handler = use_search_users_handler(use_users_adapter(s), use_tokens_adapter(), use_files_adapter())
+                handler = use_search_users_handler(use_users_adapter(s), use_tokens_adapter(), use_files_adapter(s))
                 paginated_users = await handler.execute(query, page, per_page, info.context.token)
                 return PaginatedUsersResponse(
                     page=paginated_users.get_page(),
