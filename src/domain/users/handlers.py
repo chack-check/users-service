@@ -355,18 +355,41 @@ class ResetPasswordHandler:
 
 class SearchUsersHandler:
 
-    def __init__(self, users_port: UsersPort, tokens_port: TokensPort):
+    def __init__(self, users_port: UsersPort, tokens_port: TokensPort, files_port: FilesPort):
         self._users_port = users_port
         self._tokens_port = tokens_port
+        self._files_port = files_port
 
     async def execute(self, query: str, page: int, per_page: int, token: str) -> PaginatedResponse[User]:
+        await self._validate_token(token)
+        users = await self._search_users(query, page, per_page)
+        return users
+
+    async def _validate_token(self, token: str) -> None:
+        user_id = await self._get_user_id_from_token(token)
+        await self._validate_user_id_exists(user_id)
+
+    async def _get_user_id_from_token(self, token: str) -> int:
         user_id = await self._tokens_port.decode_token(token)
         if not user_id:
             raise IncorrectTokenException("incorrect token")
 
+        return user_id
+
+    async def _validate_user_id_exists(self, user_id: int) -> None:
         user = await self._users_port.get_by_id(user_id)
         if not user:
             raise IncorrectTokenException("incorrect token")
 
+    async def _search_users(self, query: str, page: int, per_page: int) -> PaginatedResponse[User]:
+        users = await self._search_raw_users_data(query, page, per_page)
+        await self._setup_users_avatars(users.get_data())
+        return users
+
+    async def _search_raw_users_data(self, query: str, page: int, per_page: int) -> PaginatedResponse[User]:
         users = await self._users_port.search_users(query, page, per_page)
         return users
+
+    async def _setup_users_avatars(self, users: list[User]) -> None:
+        for user in users:
+            user.set_avatar(self._files_port.get_default(user))
