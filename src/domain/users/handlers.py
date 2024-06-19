@@ -392,4 +392,5 @@ class SearchUsersHandler:
 
     async def _setup_users_avatars(self, users: list[User]) -> None:
         for user in users:
-            user.set_avatar(self._files_port.get_default(user))
+            if not user.get_avatar():
+                user.set_avatar(self._files_port.get_default(user))
