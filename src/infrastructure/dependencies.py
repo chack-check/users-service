@@ -240,8 +240,10 @@ def use_generate_auth_session_handler(
 def use_search_users_handler(
     users_port: UsersPort,
     tokens_port: TokensPort,
+    files_port: FilesPort,
 ) -> SearchUsersHandler:
     return SearchUsersHandler(
         users_port,
         tokens_port,
+        files_port,
     )
